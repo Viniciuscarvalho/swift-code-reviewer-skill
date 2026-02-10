@@ -1,0 +1,15 @@
+# Git
+.git/
+.gitignore
+
+# macOS
+.DS_Store
+*.swp
+
+# Editor
+.vscode/
+.idea/
+
+# Development
+node_modules/
+*.log

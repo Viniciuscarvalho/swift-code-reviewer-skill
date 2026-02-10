@@ -1,0 +1,41 @@
+{
+  "name": "swift-code-reviewer-skill",
+  "version": "1.0.0",
+  "description": "Claude Code skill for comprehensive Swift/SwiftUI code reviews with multi-layer analysis",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "skill",
+    "swift",
+    "swiftui",
+    "code-review",
+    "ios",
+    "macos",
+    "apple"
+  ],
+  "author": "Vinicius Carvalho",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Viniciuscarvalho/swift-code-reviewer-skill.git"
+  },
+  "homepage": "https://github.com/Viniciuscarvalho/swift-code-reviewer-skill#readme",
+  "bugs": {
+    "url": "https://github.com/Viniciuscarvalho/swift-code-reviewer-skill/issues"
+  },
+  "bin": {
+    "swift-code-reviewer-skill": "./bin/install.js"
+  },
+  "files": [
+    "bin/",
+    "references/",
+    "SKILL.md",
+    "README.md",
+    "LICENSE",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

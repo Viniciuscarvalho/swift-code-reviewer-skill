@@ -53,20 +53,36 @@ A comprehensive code review skill for Claude that performs multi-layer analysis 
 
 ## Installation
 
-### Option 1: Clone This Repository
+### Option 1: NPX (Recommended)
+
+The fastest way to install - no cloning required:
+
+```bash
+npx swift-code-reviewer-skill
+```
+
+This automatically installs the skill to `~/.claude/skills/swift-code-reviewer-skill/`
+
+To uninstall:
+
+```bash
+npx swift-code-reviewer-skill uninstall
+```
+
+### Option 2: Clone This Repository
 
 ```bash
 # Clone the skill
-git clone https://github.com/yourusername/swift-code-reviewer-skill.git ~/.claude/skills/swift-code-reviewer
+git clone https://github.com/Viniciuscarvalho/swift-code-reviewer-skill.git ~/.claude/skills/swift-code-reviewer-skill
 
 # The skill is now ready to use!
 ```
 
-### Option 2: Manual Installation
+### Option 3: Manual Installation
 
 1. Create the skill directory:
 ```bash
-mkdir -p ~/.claude/skills/swift-code-reviewer/references
+mkdir -p ~/.claude/skills/swift-code-reviewer-skill/references
 ```
 
 2. Download the files from this repository into the directory
@@ -76,8 +92,8 @@ mkdir -p ~/.claude/skills/swift-code-reviewer/references
 ### Verify Installation
 
 ```bash
-ls ~/.claude/skills/swift-code-reviewer/
-# Should show: SKILL.md, README.md, and references/
+ls ~/.claude/skills/swift-code-reviewer-skill/
+# Should show: SKILL.md, README.md, references/, and more
 ```
 
 ## Usage
@@ -499,9 +515,8 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/swift-code-reviewer-skill/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/swift-code-reviewer-skill/discussions)
-- **Twitter**: [@yourusername](https://twitter.com/yourusername)
+- **Issues**: [GitHub Issues](https://github.com/Viniciuscarvalho/swift-code-reviewer-skill/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Viniciuscarvalho/swift-code-reviewer-skill/discussions)
 
 ## Version History
 
