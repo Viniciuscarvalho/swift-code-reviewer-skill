@@ -1,6 +1,6 @@
 ---
 name: swift-code-reviewer
-description: Perform thorough code reviews for Swift/SwiftUI code, analyzing code quality, architecture, performance, security, and adherence to Swift 6+ best practices, SwiftUI patterns, iOS/macOS platform guidelines, and project-specific coding standards from .claude/CLAUDE.md. Use when reviewing code changes, performing quality audits, or providing structured feedback on Swift codebases with all severity levels and positive feedback.
+description: Perform thorough code reviews for Swift/SwiftUI code, analyzing code quality, architecture, performance, security, and adherence to Swift 6+ best practices, SwiftUI patterns, navigation architecture, sheet routing, theming, async state, iOS/macOS platform guidelines, and project-specific coding standards from .claude/CLAUDE.md. Use when reviewing code changes, performing quality audits, or providing structured feedback on Swift codebases with all severity levels and positive feedback.
 ---
 
 # Swift/SwiftUI Code Review Skill
@@ -389,6 +389,23 @@ This skill **references** (not duplicates) three foundational skills for domain 
 - Reference performance-specific checks when reviewing view code
 - Apply recommendations from the skill to performance-sensitive paths
 
+### 4. swiftui-ui-patterns
+**When to Use:** Reviewing navigation architecture, sheet/modal routing, TabView setup, theming, async state management, focus handling, or API client patterns
+
+**What it Provides:**
+- Navigation architecture (route enums, RouterPath, centralized navigationDestination)
+- Sheet/modal routing (item-driven sheets, SheetDestination enum)
+- TabView with independent per-tab navigation history
+- Theming with semantic colors via `@Environment(Theme.self)`
+- Async state patterns (`.task(id:)`, LoadState enum, CancellationError handling)
+- Focus chaining with FocusField enum and `.onSubmit`
+- Lightweight API client pattern (closure-based structs, `.live()` / `.mock()` factories)
+
+**How to Leverage:**
+- Read `~/.claude/skills/swiftui-ui-patterns/references/navigation.md` for route enum and RouterPath checks
+- Reference `sheets-modals.md` for sheet routing validation
+- Use `theming.md` for semantic color enforcement
+
 **Integration Strategy:**
 1. Load relevant reference files from these skills as needed
 2. Apply their checklist items to the review
@@ -619,6 +636,29 @@ Steps:
 5. Summarize common patterns and issues across all files
 ```
 
+### Example 6: Review Navigation / Routing Code
+```
+User: "Review our navigation setup and routing code"
+
+Steps:
+1. Read .claude/CLAUDE.md for project navigation patterns
+2. Read router/coordinator files (RouterPath, AppCoordinator, TabRouter)
+3. Read root views that set up NavigationStack and TabView
+4. Run navigation architecture checks:
+   - Route destinations use typed Hashable enum (not String/Int)
+   - RouterPath @Observable owns path (not ad-hoc @State)
+   - Single centralized .navigationDestination per stack
+   - .sheet(item:) preferred over .sheet(isPresented:) when model selected
+   - Multiple sheets use SheetDestination enum (not multiple booleans)
+   - Each tab has independent RouterPath (not shared)
+   - .onOpenURL at app root, not scattered in feature views
+5. Run async state checks:
+   - .task(id:) for input-driven async work
+   - CancellationError silenced
+   - LoadState<T> enum instead of multiple booleans
+6. Generate report with navigation-specific findings
+```
+
 ## Resources
 
 This skill includes the following reference materials:
@@ -685,6 +725,6 @@ For runtime analysis, recommend using Instruments or other profiling tools.
 
 ## Version
 
-**Version**: 1.0.0
-**Last Updated**: 2026-02-10
+**Version**: 1.1.0
+**Last Updated**: 2026-03-16
 **Compatible with**: Swift 6+, SwiftUI (iOS 17+, macOS 14+, watchOS 10+, tvOS 17+, visionOS 1+)

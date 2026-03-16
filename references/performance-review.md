@@ -493,6 +493,86 @@ struct WaterfallLayout: Layout {
 }
 ```
 
+### 3.5 Scroll Container Selection
+
+**Check for:**
+- [ ] Correct scroll container chosen for the use case
+- [ ] No nested scroll views on the same axis
+- [ ] `List` used for system-style rows with swipe actions; `LazyVStack` for custom layouts
+- [ ] Plain `VStack` only for small, fixed-count content
+
+**Decision Table:**
+
+| Use Case | Container | Why |
+|----------|-----------|-----|
+| System-style rows, swipe actions, sections | `List` | Built-in lazy loading, cell reuse |
+| Custom row layout, >20 items | `ScrollView + LazyVStack` | Lazy + full layout control |
+| Grid of items | `LazyVGrid` | 2D lazy loading |
+| Small static list (<10 items) | `VStack` | Simplest, no lazy overhead |
+| Horizontal scrolling carousel | `ScrollView(.horizontal) + LazyHStack` | Horizontal lazy |
+
+**Examples:**
+
+❌ **Bad: VStack for large dynamic list**
+```swift
+ScrollView {
+    VStack {  // ❌ All views created immediately — bad for 100+ items
+        ForEach(posts) { post in
+            PostRow(post: post)
+        }
+    }
+}
+```
+
+❌ **Bad: Nested ScrollViews on same axis**
+```swift
+ScrollView(.vertical) {
+    LazyVStack {
+        ForEach(sections) { section in
+            ScrollView(.vertical) {  // ❌ Nested vertical scroll — broken UX + perf
+                ForEach(section.items) { item in
+                    ItemRow(item: item)
+                }
+            }
+        }
+    }
+}
+```
+
+✅ **Good: List for system-style content**
+```swift
+List(posts) { post in  // ✅ Lazy by default, swipe actions, separators
+    PostRow(post: post)
+        .swipeActions { Button("Delete", role: .destructive) { delete(post) } }
+}
+.listStyle(.plain)
+```
+
+✅ **Good: LazyVStack for custom layout feeds**
+```swift
+ScrollView {
+    LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {  // ✅ Lazy + custom layout
+        ForEach(posts) { post in
+            PostCardView(post: post)
+                .padding(.horizontal)
+        }
+    }
+}
+```
+
+✅ **Good: LazyVGrid for photo grid**
+```swift
+let columns = [GridItem(.adaptive(minimum: 100))]
+
+ScrollView {
+    LazyVGrid(columns: columns, spacing: 2) {  // ✅ 2D lazy grid
+        ForEach(photos) { photo in
+            PhotoThumbnail(photo: photo)
+        }
+    }
+}
+```
+
 ---
 
 ## 4. Image Performance
@@ -859,6 +939,115 @@ VStack {
 
 ---
 
+## 8. Narrow Observation Scope
+
+### 8.1 Read Only What You Display
+
+**Check for:**
+- [ ] Views read only the properties they actually display (not entire `@Observable` objects passed unnecessarily)
+- [ ] Subviews receive minimal data needed (IDs or value types when possible, not full observable models)
+- [ ] `@Observable` objects not passed to descendants that don't observe them
+
+**Examples:**
+
+❌ **Bad: Passing entire observable to unrelated subview**
+```swift
+@Observable
+final class FeedViewModel {
+    var posts: [Post] = []
+    var isLoading: Bool = false
+    var currentUser: User = .placeholder
+    var unreadCount: Int = 0
+    // ... many more properties
+}
+
+struct FeedView: View {
+    let viewModel: FeedViewModel
+
+    var body: some View {
+        List(viewModel.posts) { post in
+            PostRow(viewModel: viewModel, post: post)  // ❌ Passes entire ViewModel
+        }
+    }
+}
+
+struct PostRow: View {
+    let viewModel: FeedViewModel  // ❌ Observes ALL viewModel properties, re-renders on any change
+    let post: Post
+
+    var body: some View {
+        Text(post.title)  // Only uses post, but re-renders on isLoading, unreadCount changes
+    }
+}
+```
+
+✅ **Good: Pass only what the subview needs**
+```swift
+struct FeedView: View {
+    let viewModel: FeedViewModel
+
+    var body: some View {
+        List(viewModel.posts) { post in
+            PostRow(post: post)  // ✅ Pass only the value, not the entire observable
+        }
+    }
+}
+
+struct PostRow: View {
+    let post: Post  // ✅ Only observes/depends on this post
+
+    var body: some View {
+        Text(post.title)
+    }
+}
+```
+
+### 8.2 Lazy Containers for Feeds
+
+**Check for:**
+- [ ] Feeds with >20 items use lazy containers (`List`, `LazyVStack`, `LazyVGrid`)
+- [ ] Row views are lightweight (no heavy init, no async work in init)
+- [ ] `.task` or `.onAppear` on rows used for per-row async loading (e.g., avatar images)
+
+**Examples:**
+
+❌ **Bad: Eager loading all rows**
+```swift
+ScrollView {
+    VStack {  // ❌ Instantiates all PostRow views immediately
+        ForEach(viewModel.posts) { post in
+            PostRow(post: post)
+        }
+    }
+}
+```
+
+✅ **Good: Lazy container with lightweight rows**
+```swift
+List(viewModel.posts) { post in  // ✅ Lazy — only creates visible rows
+    PostRow(post: post)
+}
+
+struct PostRow: View {
+    let post: Post
+    @State private var avatar: Image?
+
+    var body: some View {
+        HStack {
+            (avatar ?? Image(systemName: "person.circle"))
+                .resizable()
+                .frame(width: 40, height: 40)
+            Text(post.content)
+        }
+        .task {  // ✅ Load avatar lazily only when row appears
+            avatar = await loadAvatar(url: post.avatarURL)
+        }
+    }
+}
+```
+
+---
+
 ## Quick Performance Checklist
 
 ### Critical (Fix Immediately)
@@ -873,6 +1062,8 @@ VStack {
 - [ ] AsyncImage for remote images
 - [ ] LazyVStack/LazyHStack for large lists
 - [ ] Minimal GeometryReader usage
+- [ ] Correct scroll container selected (List vs LazyVStack vs LazyVGrid vs VStack)
+- [ ] No nested scroll views on the same axis
 
 ### Medium Priority
 - [ ] Computed properties for derived data
@@ -880,6 +1071,8 @@ VStack {
 - [ ] Proper task cancellation
 - [ ] Efficient image sizing
 - [ ] Resource cleanup in deinit
+- [ ] Narrow observation scope (subviews receive only needed data, not full @Observable)
+- [ ] @Observable not propagated to unrelated descendants
 
 ### Low Priority
 - [ ] Animation performance optimization

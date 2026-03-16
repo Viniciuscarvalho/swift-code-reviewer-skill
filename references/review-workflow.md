@@ -521,6 +521,127 @@ Button("Log In") {
 - [ ] Keyboard navigation support
 - [ ] VoiceOver tested (if critical UI)
 
+### Step 2.2B: Navigation & UI Architecture Check
+
+**Reference**: `swiftui-ui-patterns` skill, `references/swiftui-review-checklist.md` (Sections 8–14)
+
+Apply this step when reviewing views that contain navigation, sheets, TabView, or async state loading.
+
+#### Route Enum & RouterPath
+```swift
+// ✅ Good: Typed route enum + RouterPath
+enum AppRoute: Hashable {
+    case userDetail(userID: UUID)
+    case settings
+}
+
+@Observable final class RouterPath {
+    var path: [AppRoute] = []
+    func navigate(to route: AppRoute) { path.append(route) }
+}
+```
+
+**Checks:**
+- [ ] Route destinations defined as typed `Hashable` enum (not String/Int raw values)
+- [ ] `RouterPath` `@Observable` owns the navigation path (not ad-hoc `@State var path`)
+- [ ] Single `.navigationDestination(for: Route.self)` per `NavigationStack` (in root view, not child views)
+
+#### Sheet Routing
+```swift
+// ✅ Good: Item-driven + SheetDestination enum
+enum SheetDestination: Identifiable { case compose; case profile(UUID); var id: String { ... } }
+
+@State private var sheetDestination: SheetDestination?
+.sheet(item: $sheetDestination) { destination in
+    switch destination { case .compose: ...; case .profile(let id): ... }
+}
+```
+
+**Checks:**
+- [ ] `.sheet(item:)` preferred over `.sheet(isPresented:)` when a model is selected
+- [ ] Multiple sheets use a single `SheetDestination` `Identifiable` enum (not multiple `@State Bool`)
+- [ ] No multiple `.sheet(isPresented:)` modifiers on the same view for different destinations
+
+#### TabView Architecture
+```swift
+// ✅ Good: Independent RouterPath per tab
+@Observable final class AppTabRouter {
+    var homeRouter = RouterPath()
+    var searchRouter = RouterPath()
+    func router(for tab: AppTab) -> RouterPath { ... }
+}
+```
+
+**Checks:**
+- [ ] Each tab has its own `RouterPath` (not a single shared `NavigationPath`)
+- [ ] Tab switching preserves navigation history in each tab
+- [ ] Action tabs (compose, post) handled via side effect (modal), not actual tab destination
+
+#### Deep Link Handling
+```swift
+// ✅ Good: Centralized at root
+.onOpenURL { url in router.handle(url: url) }  // In root view only
+```
+
+**Checks:**
+- [ ] `.onOpenURL` applied at app root (not in feature views)
+- [ ] URL parsing handled in router/coordinator, not in views
+- [ ] Deep link routes to the correct tab router when per-tab navigation is used
+
+#### Theming
+```swift
+// ✅ Good: Semantic colors via Theme
+@Environment(Theme.self) private var theme
+Text(title).foregroundStyle(theme.labelPrimary)
+```
+
+**Checks:**
+- [ ] No raw `Color.blue`, `Color.white`, `Color.red` when a project `Theme` object exists
+- [ ] Colors accessed via `@Environment(Theme.self)` or equivalent design token
+- [ ] `Theme` provided at app root via `.environment(theme)`
+
+#### Async State Patterns
+```swift
+// ✅ Good: .task(id:) with debounce + CancellationError silenced
+.task(id: query) {
+    do {
+        try await Task.sleep(for: .milliseconds(300))  // Debounce
+        results = try await search(query)
+    } catch is CancellationError { }  // Silenced
+    catch { /* real error */ }
+}
+
+// ✅ Good: LoadState enum
+enum LoadState<T> { case idle, loading, loaded(T), error(Error) }
+```
+
+**Checks:**
+- [ ] `.task(id:)` used for input-driven async work (not `.onChange + Task { }`)
+- [ ] `CancellationError` silenced when using `.task(id:)` (not shown to user)
+- [ ] `LoadState<T>` enum used instead of multiple `isLoading`/`hasError` booleans
+
+#### Focus and Input
+```swift
+// ✅ Good: FocusField enum with chaining
+enum FocusField { case email, password }
+@FocusState private var focusedField: FocusField?
+
+TextField("Email", text: $email)
+    .focused($focusedField, equals: .email)
+    .onSubmit { focusedField = .password }  // Chain to next
+
+SecureField("Password", text: $password)
+    .focused($focusedField, equals: .password)
+    .onSubmit { submitForm() }  // Last field submits
+```
+
+**Checks:**
+- [ ] `FocusField` enum used with `@FocusState` (not multiple `@FocusState private var isFocused: Bool`)
+- [ ] `.onSubmit` advances focus to the next field in sequence
+- [ ] Last field's `.onSubmit` triggers the primary action (login, search, etc.)
+
+---
+
 ### Step 2.3: Performance Check
 
 **Reference**: `swiftui-performance-audit`
