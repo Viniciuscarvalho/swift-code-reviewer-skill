@@ -1,5 +1,7 @@
 # Swift Code Reviewer Agent Skill
 
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/Viniciuscarvalho?style=social)](https://github.com/sponsors/Viniciuscarvalho)
+
 A comprehensive code review skill for Claude that performs multi-layer analysis of Swift and SwiftUI code, combining Apple's best practices with project-specific coding standards.
 
 ## Features
