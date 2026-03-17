@@ -593,6 +593,281 @@ struct UserListView: View {
 
 ---
 
+## 5A. Lightweight Client Pattern (Closure-Based)
+
+### 5A.1 Overview
+
+**Purpose**: Define API clients as value-type structs with async closure properties, enabling easy swapping between live and mock implementations — especially for SwiftUI previews.
+
+**Benefits:**
+- Preview-friendly (no network calls in Xcode Previews)
+- Testable without subclassing or protocol mocking boilerplate
+- Composable: clients can be scoped per-feature
+- No shared mutable singleton state
+
+### 5A.2 Implementation Pattern
+
+**Check for:**
+- [ ] API client defined as a `struct` with `async` closure properties (not a singleton class)
+- [ ] Static factory `.live(baseURL:)` for production
+- [ ] Static factory `.mock(...)` for previews and tests
+- [ ] Store (`@Observable`) holds the client; views never call the client directly
+- [ ] Client injected via `@Environment` or constructor
+
+**Examples:**
+
+❌ **Bad: Singleton class client**
+```swift
+final class UserAPIClient {
+    static let shared = UserAPIClient()  // ❌ Singleton — untestable, preview-unfriendly
+
+    func fetchUser(id: UUID) async throws -> User {
+        let url = URL(string: "https://api.example.com/users/\(id)")!
+        let (data, _) = try await URLSession.shared.data(from: url)
+        return try JSONDecoder().decode(User.self, from: data)
+    }
+}
+
+final class UserViewModel {
+    func loadUser(id: UUID) async {
+        let user = try await UserAPIClient.shared.fetchUser(id: id)  // ❌ Hard dependency
+    }
+}
+```
+
+✅ **Good: Struct with closure properties**
+```swift
+// Client defined as a struct with closure properties
+struct UserAPIClient {
+    var fetchUser: (UUID) async throws -> User
+    var updateUser: (User) async throws -> User
+    var deleteUser: (UUID) async throws -> Void
+}
+
+// Live implementation
+extension UserAPIClient {
+    static func live(baseURL: URL) -> Self {
+        UserAPIClient(
+            fetchUser: { id in
+                let url = baseURL.appendingPathComponent("users/\(id)")
+                let (data, _) = try await URLSession.shared.data(from: url)
+                return try JSONDecoder().decode(User.self, from: data)
+            },
+            updateUser: { user in
+                var request = URLRequest(url: baseURL.appendingPathComponent("users/\(user.id)"))
+                request.httpMethod = "PUT"
+                request.httpBody = try JSONEncoder().encode(user)
+                let (data, _) = try await URLSession.shared.data(for: request)
+                return try JSONDecoder().decode(User.self, from: data)
+            },
+            deleteUser: { id in
+                var request = URLRequest(url: baseURL.appendingPathComponent("users/\(id)"))
+                request.httpMethod = "DELETE"
+                _ = try await URLSession.shared.data(for: request)
+            }
+        )
+    }
+}
+
+// Mock implementation for previews and tests
+extension UserAPIClient {
+    static func mock(
+        fetchUser: @escaping (UUID) async throws -> User = { _ in .mock },
+        updateUser: @escaping (User) async throws -> User = { $0 },
+        deleteUser: @escaping (UUID) async throws -> Void = { _ in }
+    ) -> Self {
+        UserAPIClient(
+            fetchUser: fetchUser,
+            updateUser: updateUser,
+            deleteUser: deleteUser
+        )
+    }
+}
+
+// Store holds the client — views never call it directly
+@MainActor
+@Observable
+final class UserStore {
+    private let client: UserAPIClient
+    private(set) var user: User?
+    private(set) var isLoading = false
+
+    init(client: UserAPIClient) {
+        self.client = client
+    }
+
+    func loadUser(id: UUID) async {
+        isLoading = true
+        defer { isLoading = false }
+        user = try? await client.fetchUser(id)
+    }
+}
+
+// View uses Store, not Client directly
+struct UserProfileView: View {
+    let store: UserStore
+
+    var body: some View {
+        Group {
+            if let user = store.user {
+                Text(user.name)
+            } else {
+                ProgressView()
+            }
+        }
+        .task { await store.loadUser(id: userID) }
+    }
+}
+
+// Preview uses mock client
+#Preview {
+    UserProfileView(store: UserStore(client: .mock(
+        fetchUser: { _ in User(id: UUID(), name: "Preview User") }
+    )))
+}
+
+// App uses live client
+@main
+struct MyApp: App {
+    let userStore = UserStore(client: .live(baseURL: URL(string: "https://api.example.com")!))
+
+    var body: some Scene {
+        WindowGroup {
+            UserProfileView(store: userStore)
+        }
+    }
+}
+```
+
+---
+
+## 5B. Per-Tab Navigation Architecture
+
+### 5B.1 Overview
+
+**Purpose**: Provide each tab with its own independent navigation stack and router, preserving navigation history across tab switches and supporting deep link routing to a specific tab.
+
+**Benefits:**
+- Tab navigation state preserved when switching tabs (native iOS behavior)
+- Deep links can target specific tabs without resetting all stacks
+- Decoupled tab-specific routing logic
+
+### 5B.2 Implementation Pattern
+
+**Check for:**
+- [ ] `TabRouter` (or `AppTabRouter`) owns one `RouterPath` per tab
+- [ ] `Binding(for tab:)` helper creates a `Binding<[Route]>` for each tab's stack
+- [ ] Deep links dispatched to the correct tab's router (not a global path)
+- [ ] Tab switching does not reset other tabs' navigation stacks
+
+**Examples:**
+
+❌ **Bad: Single shared path for all tabs**
+```swift
+struct MainTabView: View {
+    @State private var path = NavigationPath()  // ❌ Shared — tab switch loses history
+    @State private var selectedTab = 0
+
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            NavigationStack(path: $path) { HomeView() }.tag(0)
+            NavigationStack(path: $path) { SearchView() }.tag(1)  // ❌ Same path!
+        }
+    }
+}
+```
+
+✅ **Good: Per-tab RouterPath with deep link routing**
+```swift
+@Observable
+final class RouterPath {
+    var path: [AppRoute] = []
+
+    func navigate(to route: AppRoute) { path.append(route) }
+    func pop() { if !path.isEmpty { path.removeLast() } }
+    func popToRoot() { path.removeAll() }
+
+    func handle(url: URL) -> Bool {
+        guard let route = AppRoute(url: url) else { return false }
+        navigate(to: route)
+        return true
+    }
+}
+
+enum AppTab: Int, CaseIterable, Identifiable {
+    case home, search, notifications, profile
+    var id: Int { rawValue }
+}
+
+@Observable
+final class AppTabRouter {
+    var selectedTab: AppTab = .home
+
+    var homeRouter = RouterPath()
+    var searchRouter = RouterPath()
+    var notificationsRouter = RouterPath()
+    var profileRouter = RouterPath()
+
+    // Binding helper for each tab's path
+    func pathBinding(for tab: AppTab) -> Binding<[AppRoute]> {
+        Binding(
+            get: { self.router(for: tab).path },
+            set: { self.router(for: tab).path = $0 }
+        )
+    }
+
+    func router(for tab: AppTab) -> RouterPath {
+        switch tab {
+        case .home: return homeRouter
+        case .search: return searchRouter
+        case .notifications: return notificationsRouter
+        case .profile: return profileRouter
+        }
+    }
+
+    // Route deep link to correct tab
+    func handle(url: URL) {
+        guard let route = AppRoute(url: url) else { return }
+        let targetTab = route.preferredTab
+        selectedTab = targetTab
+        router(for: targetTab).navigate(to: route)
+    }
+}
+
+struct MainTabView: View {
+    @State private var tabRouter = AppTabRouter()
+
+    var body: some View {
+        TabView(selection: $tabRouter.selectedTab) {
+            Tab("Home", systemImage: "house", value: AppTab.home) {
+                NavigationStack(path: tabRouter.pathBinding(for: .home)) {
+                    HomeView(router: tabRouter.homeRouter)
+                        .navigationDestination(for: AppRoute.self) { route in
+                            routeDestination(route, router: tabRouter.homeRouter)
+                        }
+                }
+            }
+
+            Tab("Search", systemImage: "magnifyingglass", value: AppTab.search) {
+                NavigationStack(path: tabRouter.pathBinding(for: .search)) {
+                    SearchView(router: tabRouter.searchRouter)
+                        .navigationDestination(for: AppRoute.self) { route in
+                            routeDestination(route, router: tabRouter.searchRouter)
+                        }
+                }
+            }
+
+            // ... other tabs
+        }
+        .onOpenURL { url in
+            tabRouter.handle(url: url)  // ✅ Deep link dispatched to correct tab router
+        }
+    }
+}
+```
+
+---
+
 ## 6. Testing Strategies
 
 ### 6.1 Unit Testing

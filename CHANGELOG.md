@@ -157,6 +157,12 @@ Provided complete examples for:
 - File-specific reviews
 - Multi-file reviews
 
+## [1.1.0] - 2026-03-16
+
+### Added
+
+- increase adjusts from Dimillian skill and more scenarios to cover
+
 ## [Unreleased]
 
 ### Planned Features
@@ -181,6 +187,7 @@ Provided complete examples for:
 
 ## Version History Summary
 
+- **1.1.0** (2026-03-16): Increase adjusts from Dimillian skill and more scenarios to cover
 - **1.0.0** (2026-02-10): Initial release with comprehensive review capabilities
 
 ---

@@ -874,6 +874,734 @@ struct LoginView_Previews: PreviewProvider {  // ❌ Old pattern
 
 ---
 
+## 8. Navigation Architecture
+
+### 8.1 Route Enum Enforcement
+
+**Check for:**
+- [ ] Navigation destinations defined as typed `Hashable` enums (not String/Int/raw values)
+- [ ] Route enum covers all destinations in the stack
+- [ ] Associated values carry only the necessary data (IDs, not full models when possible)
+
+**Examples:**
+
+❌ **Bad: String-based navigation**
+```swift
+struct ContentView: View {
+    @State private var path: [String] = []  // ❌ Stringly-typed route
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            List(items) { item in
+                NavigationLink(value: "detail-\(item.id)") {  // ❌ Magic string
+                    Text(item.name)
+                }
+            }
+        }
+    }
+}
+```
+
+✅ **Good: Typed route enum**
+```swift
+enum AppRoute: Hashable {
+    case userDetail(userID: UUID)
+    case userEdit(userID: UUID)
+    case settings
+    case notifications
+}
+
+struct ContentView: View {
+    @State private var router = RouterPath()
+
+    var body: some View {
+        NavigationStack(path: $router.path) {
+            List(users) { user in
+                NavigationLink(value: AppRoute.userDetail(userID: user.id)) {
+                    Text(user.name)
+                }
+            }
+            .navigationDestination(for: AppRoute.self) { route in
+                routeDestination(route)
+            }
+        }
+    }
+}
+```
+
+**Reference**: `~/.claude/skills/swiftui-ui-patterns/references/navigation.md`
+
+### 8.2 RouterPath Pattern
+
+**Check for:**
+- [ ] Navigation path owned by `RouterPath` `@Observable` class, not ad-hoc `@State var path`
+- [ ] RouterPath exposed as `@Observable` so views can bind to it
+- [ ] Path manipulation methods (`navigate(to:)`, `pop()`, `popToRoot()`) on RouterPath
+
+**Examples:**
+
+❌ **Bad: Ad-hoc @State path**
+```swift
+struct RootView: View {
+    @State private var path = NavigationPath()  // ❌ Ad-hoc, not reusable
+    @State private var showProfile = false
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            // ...
+        }
+    }
+}
+```
+
+✅ **Good: RouterPath @Observable**
+```swift
+@Observable
+final class RouterPath {
+    var path: [AppRoute] = []
+
+    func navigate(to route: AppRoute) {
+        path.append(route)
+    }
+
+    func pop() {
+        guard !path.isEmpty else { return }
+        path.removeLast()
+    }
+
+    func popToRoot() {
+        path.removeAll()
+    }
+
+    func navigate(to routes: [AppRoute]) {
+        path.append(contentsOf: routes)
+    }
+}
+
+struct RootView: View {
+    @State private var router = RouterPath()
+
+    var body: some View {
+        NavigationStack(path: $router.path) {
+            HomeView(router: router)
+                .navigationDestination(for: AppRoute.self) { route in
+                    destinationView(for: route, router: router)
+                }
+        }
+    }
+}
+```
+
+### 8.3 Centralized navigationDestination
+
+**Check for:**
+- [ ] Single `.navigationDestination(for: Route.self)` per NavigationStack (not scattered in child views)
+- [ ] Destination mapping in root or coordinator view
+- [ ] No `.navigationDestination` in deeply nested views for top-level routes
+
+**Examples:**
+
+❌ **Bad: Scattered navigationDestination**
+```swift
+struct HomeView: View {
+    var body: some View {
+        List(items) { item in
+            NavigationLink(value: AppRoute.userDetail(userID: item.id)) {
+                Text(item.name)
+            }
+        }
+        .navigationDestination(for: AppRoute.self) { route in  // ❌ Defined in child
+            // Only handles some routes
+        }
+    }
+}
+```
+
+✅ **Good: Centralized in root**
+```swift
+struct RootView: View {
+    @State private var router = RouterPath()
+
+    var body: some View {
+        NavigationStack(path: $router.path) {
+            HomeView(router: router)
+                .navigationDestination(for: AppRoute.self) { route in  // ✅ Single, centralized
+                    switch route {
+                    case .userDetail(let id): UserDetailView(userID: id, router: router)
+                    case .userEdit(let id): UserEditView(userID: id, router: router)
+                    case .settings: SettingsView(router: router)
+                    case .notifications: NotificationsView(router: router)
+                    }
+                }
+        }
+        .environment(router)
+    }
+}
+```
+
+---
+
+## 9. Sheet / Modal Routing
+
+### 9.1 Item-Driven Sheet
+
+**Check for:**
+- [ ] `.sheet(item:)` preferred over `.sheet(isPresented:)` when a model is being selected/shown
+- [ ] Sheet dismissed by setting item to `nil` (not manual boolean reset)
+- [ ] No manual boolean reset after sheet dismiss
+
+**Examples:**
+
+❌ **Bad: Boolean-driven sheet with manual item**
+```swift
+struct UserListView: View {
+    @State private var showDetail = false   // ❌ Manual boolean
+    @State private var selectedUser: User?  // ❌ Two states to keep in sync
+
+    var body: some View {
+        List(users) { user in
+            Button { selectedUser = user; showDetail = true } label: { Text(user.name) }
+        }
+        .sheet(isPresented: $showDetail) {
+            if let user = selectedUser {  // ❌ Forced optional unwrap in sheet
+                UserDetailSheet(user: user)
+            }
+        }
+    }
+}
+```
+
+✅ **Good: Item-driven sheet**
+```swift
+struct UserListView: View {
+    @State private var selectedUser: User?  // ✅ Single source of truth
+
+    var body: some View {
+        List(users) { user in
+            Button { selectedUser = user } label: { Text(user.name) }
+        }
+        .sheet(item: $selectedUser) { user in  // ✅ Item-driven, auto-dismisses on nil
+            UserDetailSheet(user: user)
+        }
+    }
+}
+```
+
+### 9.2 SheetDestination Enum
+
+**Check for:**
+- [ ] Multiple sheets represented as a single `Identifiable` enum, not multiple `@State` booleans
+- [ ] `SheetDestination` enum covers all possible modals in the view
+- [ ] Only one `.sheet(item:)` call per view
+
+**Examples:**
+
+❌ **Bad: Multiple boolean states for sheets**
+```swift
+struct HomeView: View {
+    @State private var showCompose = false    // ❌ Multiple booleans
+    @State private var showProfile = false    // ❌ Multiple booleans
+    @State private var showSettings = false   // ❌ Multiple booleans
+
+    var body: some View {
+        // ...
+        .sheet(isPresented: $showCompose) { ComposeView() }
+        .sheet(isPresented: $showProfile) { ProfileView() }  // ❌ Multiple .sheet on same view
+        .sheet(isPresented: $showSettings) { SettingsView() }
+    }
+}
+```
+
+✅ **Good: SheetDestination enum**
+```swift
+enum SheetDestination: Identifiable {
+    case compose
+    case profile(userID: UUID)
+    case settings
+
+    var id: String {
+        switch self {
+        case .compose: return "compose"
+        case .profile(let id): return "profile-\(id)"
+        case .settings: return "settings"
+        }
+    }
+}
+
+struct HomeView: View {
+    @State private var sheetDestination: SheetDestination?  // ✅ Single state
+
+    var body: some View {
+        // ...
+        .sheet(item: $sheetDestination) { destination in  // ✅ Single .sheet
+            switch destination {
+            case .compose: ComposeView()
+            case .profile(let id): ProfileView(userID: id)
+            case .settings: SettingsView()
+            }
+        }
+    }
+}
+```
+
+---
+
+## 10. Deep Link Handling
+
+### 10.1 Centralized Deep Link Routing
+
+**Check for:**
+- [ ] `.onOpenURL` applied at the app root (not in feature views)
+- [ ] URL parsing and validation happens in a dedicated router/coordinator
+- [ ] Feature views do not contain URL parsing logic
+
+**Examples:**
+
+❌ **Bad: onOpenURL scattered in feature views**
+```swift
+struct HomeView: View {
+    var body: some View {
+        // ...
+        .onOpenURL { url in  // ❌ URL handling in feature view
+            if url.pathComponents.contains("profile") {
+                // Handle profile deep link
+            }
+        }
+    }
+}
+
+struct SettingsView: View {
+    var body: some View {
+        // ...
+        .onOpenURL { url in  // ❌ Another scattered handler
+            if url.pathComponents.contains("settings") {
+                // Handle settings deep link
+            }
+        }
+    }
+}
+```
+
+✅ **Good: Centralized at root, router handles routing**
+```swift
+@Observable
+final class RouterPath {
+    var path: [AppRoute] = []
+
+    func handle(url: URL) -> Bool {
+        guard let route = AppRoute(url: url) else { return false }  // ✅ URL → Route
+        navigate(to: route)
+        return true
+    }
+}
+
+// In App root
+struct RootView: View {
+    @State private var router = RouterPath()
+
+    var body: some View {
+        NavigationStack(path: $router.path) {
+            HomeView()
+                .navigationDestination(for: AppRoute.self) { route in
+                    destinationView(for: route)
+                }
+        }
+        .onOpenURL { url in  // ✅ Single handler at root
+            _ = router.handle(url: url)
+        }
+    }
+}
+```
+
+---
+
+## 11. TabView Architecture
+
+### 11.1 Independent Navigation History Per Tab
+
+**Check for:**
+- [ ] Each tab has its own `RouterPath` (not a shared global path)
+- [ ] Switching tabs preserves the navigation stack for each tab
+- [ ] Tab routers are independent `@Observable` instances
+
+**Examples:**
+
+❌ **Bad: Shared navigation path across tabs**
+```swift
+struct MainTabView: View {
+    @State private var path = NavigationPath()  // ❌ Shared across all tabs
+
+    var body: some View {
+        TabView {
+            NavigationStack(path: $path) { HomeView() }.tabItem { Label("Home", systemImage: "house") }
+            NavigationStack(path: $path) { SearchView() }.tabItem { Label("Search", systemImage: "magnifyingglass") }
+        }
+    }
+}
+```
+
+✅ **Good: Independent RouterPath per tab**
+```swift
+enum AppTab: Int, CaseIterable {
+    case home, search, notifications, profile
+}
+
+@Observable
+final class AppTabRouter {
+    var selectedTab: AppTab = .home
+
+    // Independent path per tab
+    var homeRouter = RouterPath()
+    var searchRouter = RouterPath()
+    var notificationsRouter = RouterPath()
+    var profileRouter = RouterPath()
+
+    func router(for tab: AppTab) -> RouterPath {
+        switch tab {
+        case .home: return homeRouter
+        case .search: return searchRouter
+        case .notifications: return notificationsRouter
+        case .profile: return profileRouter
+        }
+    }
+}
+
+struct MainTabView: View {
+    @State private var tabRouter = AppTabRouter()
+
+    var body: some View {
+        TabView(selection: $tabRouter.selectedTab) {
+            Tab("Home", systemImage: "house", value: .home) {
+                NavigationStack(path: $tabRouter.homeRouter.path) {  // ✅ Per-tab router
+                    HomeView(router: tabRouter.homeRouter)
+                }
+            }
+            Tab("Search", systemImage: "magnifyingglass", value: .search) {
+                NavigationStack(path: $tabRouter.searchRouter.path) {  // ✅ Per-tab router
+                    SearchView(router: tabRouter.searchRouter)
+                }
+            }
+        }
+    }
+}
+```
+
+### 11.2 Custom Tab Binding with Side Effects
+
+**Check for:**
+- [ ] Action tabs (e.g., compose, post) handled as side effects, not actual tab destinations
+- [ ] `AppTab` enum distinguishes navigable tabs from action tabs
+- [ ] Tab selection goes through `updateTab(_:)` or equivalent to handle action tabs
+
+**Examples:**
+
+❌ **Bad: Action tab treated as normal tab**
+```swift
+struct MainTabView: View {
+    @State private var selectedTab = 0
+
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            HomeView().tabItem { Label("Home", systemImage: "house") }.tag(0)
+            EmptyView().tabItem { Label("Compose", systemImage: "plus") }.tag(1)  // ❌ No action
+            ProfileView().tabItem { Label("Profile", systemImage: "person") }.tag(2)
+        }
+    }
+}
+```
+
+✅ **Good: Action tabs trigger side effects**
+```swift
+enum AppTab: Int {
+    case home, compose, profile
+
+    var isAction: Bool { self == .compose }
+}
+
+@Observable
+final class AppTabRouter {
+    var selectedTab: AppTab = .home
+    var showCompose = false
+
+    func updateTab(_ tab: AppTab) {
+        if tab.isAction {
+            showCompose = true  // ✅ Action tab triggers modal, not navigation
+        } else {
+            selectedTab = tab
+        }
+    }
+}
+
+struct MainTabView: View {
+    @State private var tabRouter = AppTabRouter()
+
+    var body: some View {
+        TabView(selection: Binding(
+            get: { tabRouter.selectedTab },
+            set: { tabRouter.updateTab($0) }  // ✅ Route through updateTab
+        )) {
+            HomeView().tabItem { Label("Home", systemImage: "house") }.tag(AppTab.home)
+            Color.clear.tabItem { Label("Compose", systemImage: "plus") }.tag(AppTab.compose)
+            ProfileView().tabItem { Label("Profile", systemImage: "person") }.tag(AppTab.profile)
+        }
+        .sheet(isPresented: $tabRouter.showCompose) {
+            ComposeView()
+        }
+    }
+}
+```
+
+---
+
+## 12. Theming Enforcement
+
+### 12.1 Semantic Colors via Theme Object
+
+**Check for:**
+- [ ] No raw color values (`Color.blue`, `Color.white`, `Color(hex:)`) when a `Theme` object exists
+- [ ] Colors accessed via `@Environment(Theme.self)` or equivalent design token
+- [ ] Theme propagated at app root via `.environment(theme)`
+
+**Examples:**
+
+❌ **Bad: Raw color values**
+```swift
+struct PostRowView: View {
+    let post: Post
+
+    var body: some View {
+        HStack {
+            Text(post.author)
+                .foregroundStyle(Color.gray)       // ❌ Raw color
+            Text(post.content)
+                .foregroundStyle(Color.black)      // ❌ Raw color
+            Spacer()
+            Image(systemName: "heart")
+                .foregroundStyle(Color.red)        // ❌ Raw color
+        }
+        .background(Color.white)                   // ❌ Raw color
+    }
+}
+```
+
+✅ **Good: Semantic colors via Theme**
+```swift
+struct PostRowView: View {
+    let post: Post
+    @Environment(Theme.self) private var theme  // ✅ Theme from environment
+
+    var body: some View {
+        HStack {
+            Text(post.author)
+                .foregroundStyle(theme.labelSecondary)  // ✅ Semantic color
+            Text(post.content)
+                .foregroundStyle(theme.labelPrimary)    // ✅ Semantic color
+            Spacer()
+            Image(systemName: "heart")
+                .foregroundStyle(theme.tintColor)       // ✅ Semantic color
+        }
+        .background(theme.primaryBackground)            // ✅ Semantic color
+    }
+}
+
+// Provide at app root
+@main
+struct MyApp: App {
+    @State private var theme = Theme.default
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environment(theme)  // ✅ Theme propagated to all views
+        }
+    }
+}
+```
+
+---
+
+## 13. Async State Patterns
+
+### 13.1 .task(id:) for Input-Driven Work
+
+**Check for:**
+- [ ] `.task(id: someValue)` used instead of `.onChange + Task { }` for input-driven async work
+- [ ] `CancellationError` silenced (not re-thrown or shown as error to user)
+- [ ] Debounce implemented inside `.task(id:)` using `Task.sleep` before the actual work
+
+**Examples:**
+
+❌ **Bad: .onChange + manual Task**
+```swift
+struct SearchView: View {
+    @State private var query = ""
+    @State private var results: [Result] = []
+
+    var body: some View {
+        TextField("Search", text: $query)
+        List(results) { result in ResultRow(result: result) }
+        .onChange(of: query) { _, newValue in
+            Task {  // ❌ Manual Task, previous not cancelled properly
+                results = await search(query: newValue)
+            }
+        }
+    }
+}
+```
+
+✅ **Good: .task(id:) with built-in cancellation and debounce**
+```swift
+struct SearchView: View {
+    @State private var query = ""
+    @State private var results: [SearchResult] = []
+
+    var body: some View {
+        TextField("Search", text: $query)
+        List(results) { result in ResultRow(result: result) }
+        .task(id: query) {  // ✅ Auto-cancels previous task when query changes
+            do {
+                try await Task.sleep(for: .milliseconds(300))  // ✅ Debounce inside task
+                results = try await search(query: query)
+            } catch is CancellationError {
+                // ✅ Silenced — expected when task is superseded
+            } catch {
+                // Handle real errors
+            }
+        }
+    }
+}
+```
+
+### 13.2 Explicit Loading/Error States
+
+**Check for:**
+- [ ] `LoadState<T>` enum (or equivalent) used instead of multiple booleans (`isLoading`, `hasError`, `isEmpty`)
+- [ ] All states represented: `.idle`, `.loading`, `.loaded(T)`, `.error(Error)`
+- [ ] View switches on `LoadState` to render appropriate UI
+
+**Examples:**
+
+❌ **Bad: Multiple boolean flags**
+```swift
+@Observable
+final class UserListViewModel {
+    var users: [User] = []
+    var isLoading: Bool = false   // ❌ Multiple flags
+    var hasError: Bool = false    // ❌ Multiple flags
+    var errorMessage: String = "" // ❌ Multiple flags
+    var isEmpty: Bool = false     // ❌ Derived, should be computed
+}
+```
+
+✅ **Good: LoadState enum**
+```swift
+enum LoadState<T> {
+    case idle
+    case loading
+    case loaded(T)
+    case error(Error)
+}
+
+@Observable
+final class UserListViewModel {
+    var loadState: LoadState<[User]> = .idle  // ✅ Single source of truth
+
+    func loadUsers() async {
+        loadState = .loading
+        do {
+            let users = try await userRepository.fetchUsers()
+            loadState = .loaded(users)
+        } catch {
+            loadState = .error(error)
+        }
+    }
+}
+
+struct UserListView: View {
+    let viewModel: UserListViewModel
+
+    var body: some View {
+        Group {
+            switch viewModel.loadState {
+            case .idle: EmptyView()
+            case .loading: ProgressView()
+            case .loaded(let users): UserListContent(users: users)
+            case .error(let error): ErrorView(error: error, retry: { Task { await viewModel.loadUsers() } })
+            }
+        }
+        .task { await viewModel.loadUsers() }
+    }
+}
+```
+
+---
+
+## 14. Focus and Input Patterns
+
+### 14.1 Focus State Chaining
+
+**Check for:**
+- [ ] `FocusField` enum used with `@FocusState` instead of multiple boolean focus states
+- [ ] `.onSubmit` advances focus to the next field in the sequence
+- [ ] Last field in chain submits the form or triggers the primary action
+
+**Examples:**
+
+❌ **Bad: Multiple boolean focus states**
+```swift
+struct LoginFormView: View {
+    @State private var email = ""
+    @State private var password = ""
+    @FocusState private var emailFocused: Bool    // ❌ Separate boolean per field
+    @FocusState private var passwordFocused: Bool  // ❌ Separate boolean per field
+
+    var body: some View {
+        TextField("Email", text: $email).focused($emailFocused)
+        SecureField("Password", text: $password).focused($passwordFocused)
+    }
+}
+```
+
+✅ **Good: FocusField enum with chaining**
+```swift
+struct LoginFormView: View {
+    @State private var email = ""
+    @State private var password = ""
+    @FocusState private var focusedField: FocusField?  // ✅ Single enum for all fields
+
+    enum FocusField {
+        case email, password
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            TextField("Email", text: $email)
+                .focused($focusedField, equals: .email)
+                .textContentType(.emailAddress)
+                .keyboardType(.emailAddress)
+                .submitLabel(.next)
+                .onSubmit { focusedField = .password }  // ✅ Chain to next field
+
+            SecureField("Password", text: $password)
+                .focused($focusedField, equals: .password)
+                .textContentType(.password)
+                .submitLabel(.done)
+                .onSubmit { login() }  // ✅ Last field submits form
+
+            Button("Log In", action: login)
+        }
+        .onAppear { focusedField = .email }  // ✅ Auto-focus first field
+    }
+
+    private func login() {
+        focusedField = nil  // ✅ Dismiss keyboard on submit
+        Task { await viewModel.login() }
+    }
+}
+```
+
+---
+
 ## Quick Reference Checklist
 
 ### Critical Issues
@@ -888,6 +1616,12 @@ struct LoginView_Previews: PreviewProvider {  // ❌ Old pattern
 - [ ] .task instead of .onAppear for async work (iOS 15+)
 - [ ] Proper property wrapper selection
 - [ ] View extraction for complex views
+- [ ] Route destinations as typed Hashable enum (not String/Int raw values)
+- [ ] RouterPath @Observable owns navigation path (not ad-hoc @State)
+- [ ] `.sheet(item:)` preferred when model is selected
+- [ ] Multiple sheets use SheetDestination enum (not multiple booleans)
+- [ ] Independent RouterPath per tab (not shared path)
+- [ ] `.task(id:)` for input-driven async work with CancellationError silenced
 
 ### Medium Priority
 - [ ] Modern .onChange syntax (iOS 17+)
@@ -895,6 +1629,10 @@ struct LoginView_Previews: PreviewProvider {  // ❌ Old pattern
 - [ ] Dynamic Type support
 - [ ] Equatable conformance for view models
 - [ ] #Preview macro (iOS 17+)
+- [ ] Semantic colors via Theme @Environment (no raw Color.blue/Color.white)
+- [ ] FocusField enum with @FocusState for multi-field forms
+- [ ] `.onOpenURL` at app root (not in feature views)
+- [ ] LoadState<T> enum instead of multiple isLoading/hasError booleans
 
 ### Low Priority
 - [ ] View body < 50 lines
