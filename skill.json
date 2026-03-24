@@ -1,0 +1,97 @@
+{
+  "name": "swift-code-reviewer",
+  "displayName": "Swift/SwiftUI Code Reviewer",
+  "version": "1.1.0",
+  "author": "Vinicius Carvalho",
+  "license": "MIT",
+  "homepage": "https://github.com/Viniciuscarvalho/swift-code-reviewer-skill",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Viniciuscarvalho/swift-code-reviewer-skill.git"
+  },
+  "description": "Comprehensive Swift/SwiftUI code review skill: analyze code quality, architecture, performance, security, and Swift 6+ best practices. Multi-layer review covering SwiftUI patterns, async/await, Sendable conformance, navigation routing, theming, dependency injection, testing, accessibility. Project-aware: reads .claude/CLAUDE.md for custom standards. Provides Critical/High/Medium/Low severity issues with file:line references and actionable feedback.",
+  "longDescription": "This skill provides comprehensive code review capabilities for Swift and SwiftUI projects, combining Apple's best practices with project-specific coding standards. It performs multi-layer analysis covering:\n\n• Code Quality: Swift best practices, naming conventions, code organization\n• Architecture: Design patterns, dependency injection, separation of concerns\n• Performance: Memory management, optimization opportunities, caching strategies\n• Security: Authentication, data protection, secure coding patterns\n• Testing: Unit tests, integration tests, test organization\n• Accessibility: WCAG compliance, VoiceOver support, Dynamic Type\n• SwiftUI Patterns: State management, performance optimization, component design\n• Concurrency: Actor isolation, MainActor, Sendable conformance, async/await\n\nFeatures:\n- Project-aware: reads .claude/CLAUDE.md and architecture documents\n- Four-phase workflow: context gathering, automated analysis, reasoning, recommendations\n- Structured feedback with file:line references and code examples\n- Integrates with swift-best-practices, swiftui-expert-skill, and related skills\n- Supports PR reviews, code audits, and team standards enforcement",
+  "categories": [
+    "code-quality",
+    "code-review",
+    "ios-development",
+    "swift",
+    "swiftui",
+    "architecture",
+    "testing"
+  ],
+  "tags": [
+    "swift",
+    "swiftui",
+    "ios",
+    "macos",
+    "code-review",
+    "architecture",
+    "performance",
+    "security",
+    "testing",
+    "accessibility",
+    "concurrency",
+    "best-practices"
+  ],
+  "keywords": [
+    "swift",
+    "swiftui",
+    "code-review",
+    "code-quality",
+    "architecture-review",
+    "performance-audit",
+    "security-analysis",
+    "swift-6",
+    "async-await",
+    "sendable",
+    "concurrency",
+    "dependency-injection",
+    "testing",
+    "accessibility"
+  ],
+  "engines": {
+    "node": ">=16.0.0",
+    "claude": ">=2024.0.0"
+  },
+  "installation": {
+    "npm": "npm install -g swift-code-reviewer-skill",
+    "github": "https://github.com/Viniciuscarvalho/swift-code-reviewer-skill"
+  },
+  "triggers": [
+    "Review this PR",
+    "Review [filename].swift",
+    "Review my changes",
+    "Code review for [component]",
+    "Check if this follows our coding standards",
+    "Review against .claude/CLAUDE.md",
+    "Architecture review",
+    "Performance audit",
+    "Security review"
+  ],
+  "relatedSkills": [
+    "swift-best-practices",
+    "swiftui-expert-skill",
+    "swiftui-performance-audit"
+  ],
+  "pricing": {
+    "model": "open-source",
+    "tiers": [
+      {
+        "name": "Community",
+        "price": "free",
+        "description": "Full access to code review features"
+      }
+    ]
+  },
+  "badges": [
+    {
+      "name": "MIT License",
+      "url": "https://img.shields.io/badge/license-MIT-blue.svg"
+    },
+    {
+      "name": "GitHub Stars",
+      "url": "https://img.shields.io/github/stars/Viniciuscarvalho/swift-code-reviewer-skill"
+    }
+  ]
+}
