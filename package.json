@@ -1,7 +1,7 @@
 {
   "name": "swift-code-reviewer-skill",
-  "version": "1.1.0",
-  "description": "Comprehensive Swift/SwiftUI code review skill: analyze code quality, architecture, performance, security, and Swift 6+ best practices. Multi-layer review covering SwiftUI patterns, async/await, Sendable conformance, navigation routing, theming, dependency injection, testing, accessibility. Project-aware: reads .claude/CLAUDE.md for custom standards. Provides Critical/High/Medium/Low severity issues with file:line references and actionable feedback. Perfect for: PR reviews, code audits, team standards enforcement, refactoring guidance.",
+  "version": "1.1.1",
+  "description": "Claude Code skill for comprehensive Swift/SwiftUI code reviews with multi-layer analysis",
   "keywords": [
     "claude",
     "claude-code",

@@ -5,11 +5,25 @@ All notable changes to the Swift Code Reviewer Agent Skill will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-03-24
+
+### Fixed
+
+- Replace `install-skill.sh` with the correct installer for this skill (previously contained the XcodeBuildMCP installer by mistake)
+- Add `uninstall` command support to `install-skill.sh`
+
+## [1.1.0] - 2026-03-16
+
+### Added
+
+- increase adjusts from Dimillian skill and more scenarios to cover
+
 ## [1.0.0] - 2026-02-10
 
 ### Added
 
 #### Core Functionality
+
 - **Four-phase review workflow**: Context Gathering → Analysis → Report Generation → Delivery
 - **Multi-layer analysis** across 6 core categories:
   - Swift Best Practices (Swift 6+ concurrency, error handling, optionals)
@@ -20,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Project-Specific Standards (.claude/CLAUDE.md integration)
 
 #### Review Capabilities
+
 - **GitHub PR reviews** via `gh` CLI integration
 - **GitLab MR reviews** via `glab` CLI integration
 - **Git diff analysis** for uncommitted changes
@@ -28,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Project standards validation** via .claude/CLAUDE.md
 
 #### Feedback System
+
 - **Severity classification**: Critical, High, Medium, Low
 - **Positive feedback** for good practices
 - **Refactoring suggestions** for improvements
@@ -36,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Prioritized action items** for structured follow-up
 
 #### Reference Documentation (7,700+ lines)
+
 - **review-workflow.md** (1,131 lines): Complete review process and git integration
 - **swift-quality-checklist.md** (928 lines): Swift 6+ patterns and best practices
 - **swiftui-review-checklist.md** (909 lines): SwiftUI state management and modern APIs
@@ -46,12 +63,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **custom-guidelines.md** (852 lines): Project standards integration guide
 
 #### Integration Features
+
 - **swift-best-practices skill** integration for Swift 6+ language patterns
 - **swiftui-expert-skill** integration for SwiftUI best practices
 - **swiftui-performance-audit** integration for performance analysis
 - **Independent operation** with comprehensive built-in checklists
 
 #### Platform Support
+
 - Swift 6.0+
 - iOS 17+, macOS 14+, watchOS 10+, tvOS 17+, visionOS 1+
 - GitHub and GitLab integration
@@ -68,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features in Detail
 
 #### Swift Quality Checks
+
 - Actor isolation and MainActor usage
 - Sendable conformance validation
 - Data race prevention
@@ -78,6 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Swift API Design Guidelines compliance
 
 #### SwiftUI Checks
+
 - @Observable pattern adoption (iOS 17+)
 - Property wrapper selection guide
 - NavigationStack vs NavigationView
@@ -88,6 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Accessibility compliance
 
 #### Performance Checks
+
 - View update optimization
 - Equatable conformance for ViewModels
 - ForEach identity stability
@@ -98,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Retain cycle prevention
 
 #### Security Checks
+
 - Keychain usage for credentials
 - Biometric authentication
 - HTTPS enforcement
@@ -109,6 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sensitive data logging prevention
 
 #### Architecture Checks
+
 - MVVM pattern validation
 - Repository pattern implementation
 - Dependency injection verification
@@ -119,6 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code organization (MARK comments, extensions)
 
 #### Project Standards
+
 - .claude/CLAUDE.md parsing and validation
 - Custom architecture pattern validation
 - Design system compliance (colors, fonts, spacing)
@@ -129,6 +154,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Templates and Examples
 
 #### Positive Feedback Templates
+
 - Modern API adoption
 - Architecture excellence
 - Code quality
@@ -137,12 +163,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Security awareness
 
 #### Issue Report Templates
+
 - Critical issues (security, crashes, data races)
 - High priority (performance, anti-patterns)
 - Medium priority (code quality, documentation)
 - Low priority (style, suggestions)
 
 #### Refactoring Suggestions
+
 - Extract subview
 - Simplify complex logic
 - Extract reusable component
@@ -151,17 +179,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Example Review Reports
 
 Provided complete examples for:
+
 - Reviewing uncommitted changes
 - Reviewing against project standards
 - Pull request reviews
 - File-specific reviews
 - Multi-file reviews
-
-## [1.1.0] - 2026-03-16
-
-### Added
-
-- increase adjusts from Dimillian skill and more scenarios to cover
 
 ## [Unreleased]
 
@@ -187,6 +210,7 @@ Provided complete examples for:
 
 ## Version History Summary
 
+- **1.1.1** (2026-03-24): Fix incorrect `install-skill.sh` (was XcodeBuildMCP installer)
 - **1.1.0** (2026-03-16): Increase adjusts from Dimillian skill and more scenarios to cover
 - **1.0.0** (2026-02-10): Initial release with comprehensive review capabilities
 
@@ -216,6 +240,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on proposing changes.
 ---
 
 **Note**: This skill follows [Semantic Versioning](https://semver.org/):
+
 - **MAJOR**: Incompatible API changes
 - **MINOR**: Backward-compatible functionality additions
 - **PATCH**: Backward-compatible bug fixes
