@@ -30,6 +30,7 @@ Use this skill when you need to:
 - Provide structured feedback to team members
 
 **Trigger patterns:**
+
 - "Review this PR"
 - "Review [filename].swift"
 - "Review my changes"
@@ -69,6 +70,7 @@ The skill follows a **four-phase workflow** to ensure comprehensive and actionab
 Execute checks across **six core categories**:
 
 #### 1. Swift Best Practices
+
 Reference: `swift-best-practices` skill knowledge base
 
 - **Concurrency Safety**
@@ -91,6 +93,7 @@ Reference: `swift-best-practices` skill knowledge base
   - Proper use of optionals
 
 #### 2. SwiftUI Quality
+
 Reference: `swiftui-expert-skill` knowledge base
 
 - **State Management**
@@ -118,6 +121,7 @@ Reference: `swiftui-expert-skill` knowledge base
   - Keyboard navigation
 
 #### 3. Performance
+
 Reference: `swiftui-performance-audit` knowledge base
 
 - **View Optimization**
@@ -256,7 +260,7 @@ Reference: `swiftui-performance-audit` knowledge base
    - Comparison with project guidelines
 
 3. **Provide Context**
-   - Explain *why* something is an issue
+   - Explain _why_ something is an issue
    - Reference best practices or standards
    - Suggest specific fixes with examples
    - Link to learning resources
@@ -266,6 +270,7 @@ Reference: `swiftui-performance-audit` knowledge base
 ### 1. Swift Language Quality
 
 **What to Check:**
+
 - Concurrency patterns (actors, async/await, Sendable)
 - Error handling (typed throws, Result type)
 - Optionals handling (avoid force unwrapping)
@@ -279,6 +284,7 @@ Reference: `swiftui-performance-audit` knowledge base
 ### 2. SwiftUI Patterns
 
 **What to Check:**
+
 - Property wrapper selection and usage
 - State management patterns
 - View lifecycle understanding
@@ -292,6 +298,7 @@ Reference: `swiftui-performance-audit` knowledge base
 ### 3. Performance Optimization
 
 **What to Check:**
+
 - View update optimization
 - ForEach identity and performance
 - Heavy work in view body
@@ -305,6 +312,7 @@ Reference: `swiftui-performance-audit` knowledge base
 ### 4. Security & Safety
 
 **What to Check:**
+
 - Force unwrap detection (`!`, `as!`, `try!`)
 - Input validation and sanitization
 - Sensitive data handling (passwords, tokens)
@@ -318,6 +326,7 @@ Reference: `swiftui-performance-audit` knowledge base
 ### 5. Architecture & Design
 
 **What to Check:**
+
 - MVVM, MVI, TCA, or other architecture compliance
 - Dependency injection patterns
 - Separation of concerns
@@ -331,6 +340,7 @@ Reference: `swiftui-performance-audit` knowledge base
 ### 6. Project-Specific Standards
 
 **What to Check:**
+
 - `.claude/CLAUDE.md` compliance
 - Custom architecture patterns
 - Design system usage
@@ -345,9 +355,11 @@ Reference: `swiftui-performance-audit` knowledge base
 This skill **references** (not duplicates) three foundational skills for domain expertise:
 
 ### 1. swift-best-practices
+
 **When to Use:** Reviewing Swift language usage, concurrency patterns, API design, or Swift 6+ migration
 
 **What it Provides:**
+
 - Swift 6+ concurrency patterns (actors, async/await, Sendable)
 - API design guidelines compliance
 - Availability pattern validation
@@ -355,14 +367,17 @@ This skill **references** (not duplicates) three foundational skills for domain 
 - Modern Swift feature adoption
 
 **How to Leverage:**
+
 - Read `~/.claude/skills/swift-best-practices/references/concurrency.md` for concurrency checks
 - Reference `swift6-features.md` for Swift 6 migration patterns
 - Use `api-design.md` for naming and parameter validation
 
 ### 2. swiftui-expert-skill
+
 **When to Use:** Reviewing SwiftUI views, state management, or UI code
 
 **What it Provides:**
+
 - State management patterns (@Observable, @State, @Binding)
 - Modern SwiftUI API guidance (iOS 17+, macOS 14+)
 - View composition best practices
@@ -370,14 +385,17 @@ This skill **references** (not duplicates) three foundational skills for domain 
 - Accessibility patterns
 
 **How to Leverage:**
+
 - Read `~/.claude/skills/swiftui-expert-skill/references/state-management.md` for property wrapper checks
 - Reference `modern-apis.md` for deprecation detection
 - Use `view-composition.md` for component structure validation
 
 ### 3. swiftui-performance-audit
+
 **When to Use:** Performance concerns identified or mentioned in PR description
 
 **What it Provides:**
+
 - View update optimization patterns
 - ForEach performance analysis
 - Layout thrash detection
@@ -385,14 +403,17 @@ This skill **references** (not duplicates) three foundational skills for domain 
 - Memory management
 
 **How to Leverage:**
+
 - Read `~/.claude/skills/swiftui-performance-audit/SKILL.md` for performance audit workflow
 - Reference performance-specific checks when reviewing view code
 - Apply recommendations from the skill to performance-sensitive paths
 
 ### 4. swiftui-ui-patterns
+
 **When to Use:** Reviewing navigation architecture, sheet/modal routing, TabView setup, theming, async state management, focus handling, or API client patterns
 
 **What it Provides:**
+
 - Navigation architecture (route enums, RouterPath, centralized navigationDestination)
 - Sheet/modal routing (item-driven sheets, SheetDestination enum)
 - TabView with independent per-tab navigation history
@@ -402,11 +423,13 @@ This skill **references** (not duplicates) three foundational skills for domain 
 - Lightweight API client pattern (closure-based structs, `.live()` / `.mock()` factories)
 
 **How to Leverage:**
+
 - Read `~/.claude/skills/swiftui-ui-patterns/references/navigation.md` for route enum and RouterPath checks
 - Reference `sheets-modals.md` for sheet routing validation
 - Use `theming.md` for semantic color enforcement
 
 **Integration Strategy:**
+
 1. Load relevant reference files from these skills as needed
 2. Apply their checklist items to the review
 3. Reference their documentation in feedback
@@ -415,6 +438,7 @@ This skill **references** (not duplicates) three foundational skills for domain 
 ## Platform Support
 
 ### GitHub Pull Requests
+
 Use `gh` CLI for fetching PR data:
 
 ```bash
@@ -432,6 +456,7 @@ gh pr view <PR-number> --json comments
 ```
 
 ### GitLab Merge Requests
+
 Use `glab` CLI for fetching MR data:
 
 ```bash
@@ -449,6 +474,7 @@ glab mr note list <MR-number>
 ```
 
 ### Local Git Changes
+
 For uncommitted changes or manual review:
 
 ```bash
@@ -469,10 +495,11 @@ git show <commit-hash>
 
 The review report follows this structure:
 
-```markdown
+````markdown
 # Code Review Report
 
 ## Summary
+
 - **Files Reviewed**: X
 - **Total Findings**: Y
 - **Critical**: 0
@@ -483,6 +510,7 @@ The review report follows this structure:
 - **Refactoring Suggestions**: 4
 
 ## Executive Summary
+
 [Brief overview of the changes and overall code quality]
 
 ---
@@ -492,6 +520,7 @@ The review report follows this structure:
 ### File: Sources/Features/Login/LoginView.swift
 
 #### ✅ Positive Feedback
+
 1. **Excellent State Management** (line 23)
    - Proper use of @Observable for view model
    - Clean separation of concerns
@@ -501,11 +530,13 @@ The review report follows this structure:
    - Proper async/await integration
 
 #### 🔴 Critical Issues
+
 1. **Data Race Risk** (line 67)
    - **Severity**: Critical
    - **Category**: Concurrency
    - **Issue**: Mutable state accessed from multiple actors without synchronization
    - **Fix**:
+
      ```swift
      // Before
      class LoginViewModel {
@@ -518,14 +549,17 @@ The review report follows this structure:
          @Published var isLoading = false
      }
      ```
+
    - **Reference**: swift-best-practices/references/concurrency.md
 
 #### 🟡 High Priority
+
 1. **Force Unwrap Detected** (line 89)
    - **Severity**: High
    - **Category**: Safety
    - **Issue**: Force unwrapping optional can cause crash
    - **Fix**:
+
      ```swift
      // Before
      let user = fetchUser()!
@@ -536,9 +570,11 @@ The review report follows this structure:
          return
      }
      ```
+
    - **Reference**: Project coding standard (.claude/CLAUDE.md:45)
 
 #### 💡 Refactoring Suggestions
+
 1. **Extract Subview** (lines 120-150)
    - Consider extracting login form into separate view
    - Improves testability and reusability
@@ -548,20 +584,24 @@ The review report follows this structure:
 ## Prioritized Action Items
 
 ### Must Fix (Critical/High)
+
 1. [ ] Fix data race in LoginViewModel.swift:67
 2. [ ] Remove force unwrap in LoginView.swift:89
 
 ### Should Fix (Medium)
+
 1. [ ] Add documentation to public APIs
 2. [ ] Improve error handling in NetworkService.swift
 
 ### Consider (Low)
+
 1. [ ] Refactor login form into separate view
 2. [ ] Add more unit tests for edge cases
 
 ---
 
 ## Positive Patterns Observed
+
 - Excellent use of @Observable for state management
 - Consistent adherence to project architecture (MVVM)
 - Comprehensive accessibility support
@@ -569,14 +609,16 @@ The review report follows this structure:
 - Good test coverage for core functionality
 
 ## References
+
 - [Swift Best Practices](~/.claude/skills/swift-best-practices/SKILL.md)
 - [SwiftUI Expert Guide](~/.claude/skills/swiftui-expert-skill/SKILL.md)
 - [Project Coding Standards](.claude/CLAUDE.md)
-```
+````
 
 ## How to Use
 
 ### Example 1: Review Specific File
+
 ```
 User: "Review UserProfileView.swift"
 
@@ -588,6 +630,7 @@ Steps:
 ```
 
 ### Example 2: Review Git Changes
+
 ```
 User: "Review my uncommitted changes"
 
@@ -600,6 +643,7 @@ Steps:
 ```
 
 ### Example 3: Review Pull Request
+
 ```
 User: "Review PR #123"
 
@@ -613,6 +657,7 @@ Steps:
 ```
 
 ### Example 4: Review Against Custom Guidelines
+
 ```
 User: "Review LoginViewModel.swift against our coding standards"
 
@@ -625,6 +670,7 @@ Steps:
 ```
 
 ### Example 5: Review Multiple Files
+
 ```
 User: "Review all ViewModels in the Features folder"
 
@@ -637,6 +683,7 @@ Steps:
 ```
 
 ### Example 6: Review Navigation / Routing Code
+
 ```
 User: "Review our navigation setup and routing code"
 
@@ -664,16 +711,19 @@ Steps:
 This skill includes the following reference materials:
 
 ### Core References
+
 - **review-workflow.md**: Detailed step-by-step review process, git commands, and diff parsing strategies
 - **feedback-templates.md**: Templates for positive/negative comments, severity classification guidelines
 
 ### Quality Checklists
+
 - **swift-quality-checklist.md**: Swift 6+ concurrency, error handling, optionals, access control, naming
 - **swiftui-review-checklist.md**: Property wrappers, state management, modern APIs, view composition
 - **performance-review.md**: View updates, ForEach optimization, layout efficiency, resource management
 - **security-checklist.md**: Input validation, sensitive data, keychain, network security
 
 ### Architecture & Customization
+
 - **architecture-patterns.md**: MVVM, MVI, TCA patterns, dependency injection, testing strategies
 - **custom-guidelines.md**: How to read and parse .claude/CLAUDE.md and project-specific standards
 
@@ -692,7 +742,7 @@ This skill includes the following reference materials:
 3. **Be Specific and Actionable**
    - Include exact file:line references
    - Provide code examples for fixes
-   - Explain *why* something is an issue
+   - Explain _why_ something is an issue
    - Link to relevant documentation
 
 4. **Prioritize by Severity**
@@ -725,6 +775,6 @@ For runtime analysis, recommend using Instruments or other profiling tools.
 
 ## Version
 
-**Version**: 1.1.0
+**Version**: 1.1.1
 **Last Updated**: 2026-03-16
 **Compatible with**: Swift 6+, SwiftUI (iOS 17+, macOS 14+, watchOS 10+, tvOS 17+, visionOS 1+)
