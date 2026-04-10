@@ -5,6 +5,21 @@ All notable changes to the Swift Code Reviewer Agent Skill will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-04-10
+
+### Added
+
+- **`init` command**: Scaffold review agent + `/review` slash command into any project via `npx swift-code-reviewer-skill init`
+- **templates/ directory**: Bundled agent (`swift-code-reviewer.md`) and command (`review.md`) templates
+- `setup` alias for `init` in both installers
+- `npx skills add` as primary installation method in README
+
+### Changed
+
+- README rewritten with `npx skills add` as primary install, `init` as step 2
+- `install-skill.sh` and `bin/install.js` now show `init` hint after install
+- Post-install message updated to guide users toward project scaffolding
+
 ## [1.1.1] - 2026-03-24
 
 ### Fixed
@@ -210,6 +225,7 @@ Provided complete examples for:
 
 ## Version History Summary
 
+- **1.2.0** (2026-04-10): Add `init` command with agent + /review scaffolding, `npx skills` as primary install
 - **1.1.1** (2026-03-24): Fix incorrect `install-skill.sh` (was XcodeBuildMCP installer)
 - **1.1.0** (2026-03-16): Increase adjusts from Dimillian skill and more scenarios to cover
 - **1.0.0** (2026-02-10): Initial release with comprehensive review capabilities

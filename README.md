@@ -7,19 +7,43 @@ A code review skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-
 
 ## Quick Start
 
+### 1. Install the skill (global, once)
+
 ```bash
-npx swift-code-reviewer-skill
+npx skills add Viniciuscarvalho/swift-code-reviewer-skill
 ```
 
-That's it. The skill is installed and ready to use. Run it again anytime to update to the latest version.
+### 2. Add the review agent to your project (optional)
 
-> No cloning, no manual setup. NPX always fetches the latest version automatically.
+```bash
+cd ~/Projects/YourApp
+npx swift-code-reviewer-skill init
+```
+
+This scaffolds two files into your project:
+
+```
+.claude/
+  agents/swift-code-reviewer.md   # review agent
+  commands/review.md              # /review slash command
+```
+
+Existing files are never overwritten.
+
+### The review flow
+
+```
+You code  -->  /review before push (free, local)  -->  done
+```
+
+- `/review` runs the full review checklist against your staged or unstaged Swift changes
+- `@swift-code-reviewer` invokes the agent directly for deeper analysis
 
 ## Usage
 
 ![Swift Code Reviewer in action](assets/demo.png)
 
-Just ask Claude to review your code:
+Ask Claude to review your code:
 
 ```
 Review this PR
@@ -27,6 +51,12 @@ Review LoginView.swift
 Review my uncommitted changes
 Review all ViewModels in the Features folder
 Check if this follows our coding standards
+```
+
+Or use the slash command after running `init`:
+
+```
+/review
 ```
 
 The skill automatically activates, reads your `.claude/CLAUDE.md` for project standards, and generates a structured report with severity levels, code examples, and prioritized action items.
@@ -42,11 +72,11 @@ The skill automatically activates, reads your `.claude/CLAUDE.md` for project st
 
 ## File: LoginViewModel.swift
 
-✅ **Excellent Modern API Usage** (line 12)
+Pass **Excellent Modern API Usage** (line 12)
 
 - Using @Observable instead of ObservableObject
 
-🟡 **Force Unwrap Detected** (line 89)
+Issue **Force Unwrap Detected** (line 89)
 Current: `let user = repository.currentUser!`
 Fix:
 guard let user = repository.currentUser else {
@@ -54,7 +84,7 @@ logger.error("No current user")
 return
 }
 
-🔴 **Violates Design System Standard** (line 45)
+Issue **Violates Design System Standard** (line 45)
 Current: `.foregroundColor(.blue)`
 Fix: `.foregroundColor(AppColors.primary)`
 
@@ -77,12 +107,12 @@ Fix: `.foregroundColor(AppColors.primary)`
 
 ### Severity Levels
 
-| Icon | Severity | Action                  |
-| ---- | -------- | ----------------------- |
-| 🔴   | Critical | Must fix before merge   |
-| 🟡   | High     | Should fix before merge |
-| 🟠   | Medium   | Fix in current sprint   |
-| 🔵   | Low      | Consider for future     |
+| Icon     | Severity | Action                  |
+| -------- | -------- | ----------------------- |
+| Critical | Critical | Must fix before merge   |
+| High     | High     | Should fix before merge |
+| Medium   | Medium   | Fix in current sprint   |
+| Low      | Low      | Consider for future     |
 
 ## Platform Support
 
@@ -116,22 +146,20 @@ Add a `.claude/CLAUDE.md` to your project and the skill will validate against yo
 ## Alternative Installation
 
 <details>
-<summary>Clone this repository</summary>
+<summary>NPX installer (installs skill only)</summary>
 
 ```bash
-git clone https://github.com/Viniciuscarvalho/swift-code-reviewer-skill.git ~/.claude/skills/swift-code-reviewer-skill
+npx swift-code-reviewer-skill
 ```
 
 </details>
 
 <details>
-<summary>Manual installation</summary>
+<summary>Clone this repository</summary>
 
 ```bash
-mkdir -p ~/.claude/skills/swift-code-reviewer-skill/references
+git clone https://github.com/Viniciuscarvalho/swift-code-reviewer-skill.git ~/.claude/skills/swift-code-reviewer-skill
 ```
-
-Download the files from this repository into the directory, then restart Claude.
 
 </details>
 
@@ -152,8 +180,9 @@ This skill optionally leverages **swift-best-practices**, **swiftui-expert-skill
 
 1. Edit `SKILL.md` for main skill logic
 2. Update reference files in `references/` for specific checklists
-3. Test with real Swift/SwiftUI code
-4. Submit a pull request
+3. Add/modify templates in `templates/` for agent and command scaffolding
+4. Test with real Swift/SwiftUI code
+5. Submit a pull request
 
 ## License
 
@@ -161,7 +190,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-**Made with ❤️ for the Swift community**
+**Made with care for the Swift community**
 
 If this skill helps your code reviews, please star the repository!
 

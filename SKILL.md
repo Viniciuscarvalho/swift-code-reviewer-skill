@@ -1,6 +1,23 @@
 ---
 name: swift-code-reviewer
-description: Perform thorough code reviews for Swift/SwiftUI code, analyzing code quality, architecture, performance, security, and adherence to Swift 6+ best practices, SwiftUI patterns, navigation architecture, sheet routing, theming, async state, iOS/macOS platform guidelines, and project-specific coding standards from .claude/CLAUDE.md. Use when reviewing code changes, performing quality audits, or providing structured feedback on Swift codebases with all severity levels and positive feedback.
+description: >
+  Multi-layer code review agent for Swift and SwiftUI projects. Analyzes PRs,
+  diffs, and files across six dimensions: Swift 6+ concurrency safety, SwiftUI
+  state management and modern APIs, performance (view updates, ForEach identity,
+  lazy loading), security (force unwraps, Keychain, input validation), architecture
+  compliance (MVVM/MVI/TCA, dependency injection), and project-specific standards
+  from .claude/CLAUDE.md. Outputs structured reports with Critical/High/Medium/Low
+  severity, positive feedback, and prioritized action items with file:line
+  references and before/after code examples.
+
+  ALWAYS use this skill when the user says "review this PR", "review my code",
+  "review my changes", "check this file", "code review", "review against our
+  standards", "audit this codebase", "check code quality", mentions reviewing
+  any .swift file, asks about Swift best practices violations in existing code,
+  or wants feedback on Swift/SwiftUI code — even if they don't explicitly say
+  "code review". Also trigger when the user asks to "check if this follows our
+  coding standards", "review uncommitted changes", "review all ViewModels",
+  or mentions reviewing navigation, sheets, theming, or async patterns in Swift.
 ---
 
 # Swift/SwiftUI Code Review Skill
@@ -775,6 +792,6 @@ For runtime analysis, recommend using Instruments or other profiling tools.
 
 ## Version
 
-**Version**: 1.1.1
-**Last Updated**: 2026-03-16
+**Version**: 1.2.0
+**Last Updated**: 2026-04-10
 **Compatible with**: Swift 6+, SwiftUI (iOS 17+, macOS 14+, watchOS 10+, tvOS 17+, visionOS 1+)
