@@ -84,7 +84,7 @@ function install() {
     'CHANGELOG.md'
   ];
 
-  const dirsToCopy = ['references'];
+  const dirsToCopy = ['references', 'skills', 'templates'];
 
   for (const file of filesToCopy) {
     const src = path.join(packageRoot, file);
