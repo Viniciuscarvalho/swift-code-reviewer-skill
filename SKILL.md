@@ -14,7 +14,7 @@ This skill provides comprehensive code review capabilities for Swift and SwiftUI
 - **Project-Aware Reviews**: Reads `.claude/CLAUDE.md` and related architecture documents to validate against project-specific standards
 - **Multi-Layer Analysis**: Combines Swift 6+ best practices, SwiftUI patterns, performance optimization, and security checks
 - **Comprehensive Feedback**: Provides Critical/High/Medium/Low severity issues, positive feedback, and refactoring suggestions
-- **Integration with Existing Skills**: Leverages `swift-best-practices`, `swiftui-expert-skill`, and `swiftui-performance-audit` for domain expertise
+- **Bundled Companion Skills**: Ships `swiftui-expert-skill`, `swift-concurrency`, `swift-testing`, `swift-expert`, and `swiftui-ui-patterns` in-tree under `skills/` — no extra installation required
 - **Actionable Output**: Structured feedback with file:line references, code examples, and prioritized action items
 
 ## When to Use This Skill
@@ -276,90 +276,88 @@ Each category has a dedicated reference file with full checklists:
 5. **Architecture & Design** — MVVM/MVI/TCA compliance, dependency injection, testability (`references/architecture-patterns.md`)
 6. **Project-Specific Standards** — `.claude/CLAUDE.md` compliance, design system, navigation patterns (`references/custom-guidelines.md`)
 
-## Integration with Existing Skills
+## Bundled Companion Skills
 
-This skill **references** (not duplicates) three foundational skills for domain expertise:
+Five companion skills ship inside this repo under `skills/` and are available immediately after cloning or installing — no extra setup required. Each contains a full `SKILL.md` and a `references/` directory.
 
-### 1. swift-best-practices
+> See [`skills/README.md`](skills/README.md) for the full index and attribution details.
+> Original authors: [@AvdLee](https://github.com/AvdLee), [@Dimillian](https://github.com/Dimillian), [@bocato](https://github.com/bocato).
 
-**When to Use:** Reviewing Swift language usage, concurrency patterns, API design, or Swift 6+ migration
+### 1. swiftui-expert-skill · `skills/swiftui-expert-skill/`
 
-**What it Provides:**
+**When to use:** Reviewing SwiftUI views, state management, modern APIs, macOS scenes, Liquid Glass (iOS 26+)
 
-- Swift 6+ concurrency patterns (actors, async/await, Sendable)
-- API design guidelines compliance
-- Availability pattern validation
-- Breaking changes detection
-- Modern Swift feature adoption
+**Key references:**
 
-**How to Leverage:**
+| File                                   | When to consult                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------ |
+| `references/state-management.md`       | Property wrapper selection (@State, @Binding, @Observable, @Environment) |
+| `references/latest-apis.md`            | Deprecation detection — always check before flagging an API              |
+| `references/view-structure.md`         | View extraction rules and composition patterns                           |
+| `references/performance-patterns.md`   | Equatable conformance, body evaluation cost                              |
+| `references/accessibility-patterns.md` | VoiceOver grouping, traits, Dynamic Type                                 |
+| `references/liquid-glass.md`           | iOS 26+ Liquid Glass adoption and availability gating                    |
 
-- Read `~/.claude/skills/swift-best-practices/references/concurrency.md` for concurrency checks
-- Reference `swift6-features.md` for Swift 6 migration patterns
-- Use `api-design.md` for naming and parameter validation
+### 2. swift-concurrency · `skills/swift-concurrency/`
 
-### 2. swiftui-expert-skill
+**When to use:** Any concurrency-related finding — actor isolation, MainActor, Sendable, async/await, Swift 6 migration
 
-**When to Use:** Reviewing SwiftUI views, state management, or UI code
+**Key references:**
 
-**What it Provides:**
+| File                               | When to consult                                              |
+| ---------------------------------- | ------------------------------------------------------------ |
+| `references/sendable.md`           | Sendable conformance and `@unchecked Sendable` justification |
+| `references/actors.md`             | Actor isolation, custom actors vs MainActor                  |
+| `references/async-await-basics.md` | Structured vs unstructured tasks, `Task.detached` rationale  |
+| `references/migration.md`          | Swift 6 migration patterns and blast-radius minimisation     |
+| `references/testing.md`            | Concurrency-safe test patterns                               |
 
-- State management patterns (@Observable, @State, @Binding)
-- Modern SwiftUI API guidance (iOS 17+, macOS 14+)
-- View composition best practices
-- Property wrapper selection guide
-- Accessibility patterns
+### 3. swift-testing · `skills/swift-testing/`
 
-**How to Leverage:**
+**When to use:** Reviewing test files, test doubles, snapshot tests, or XCTest migrations
 
-- Read `~/.claude/skills/swiftui-expert-skill/references/state-management.md` for property wrapper checks
-- Reference `modern-apis.md` for deprecation detection
-- Use `view-composition.md` for component structure validation
+**Key references:**
 
-### 3. swiftui-performance-audit
+| File                                | When to consult                                 |
+| ----------------------------------- | ----------------------------------------------- |
+| `references/test-organization.md`   | Suite hierarchy, naming, and tagging            |
+| `references/test-doubles.md`        | Dummy / Fake / Stub / Spy / Mock taxonomy       |
+| `references/async-testing.md`       | `#expect(throws:)`, async confirmation patterns |
+| `references/parameterized-tests.md` | `@Test(arguments:)` for data-driven tests       |
+| `references/migration-xctest.md`    | XCTest → Swift Testing migration checklist      |
 
-**When to Use:** Performance concerns identified or mentioned in PR description
+### 4. swift-expert · `skills/swift-expert/`
 
-**What it Provides:**
+**When to use:** Deep Swift 6+ language questions — protocol-oriented design, memory, performance, general architecture
 
-- View update optimization patterns
-- ForEach performance analysis
-- Layout thrash detection
-- Image handling best practices
-- Memory management
+**Key references:**
 
-**How to Leverage:**
+| File                               | When to consult                                      |
+| ---------------------------------- | ---------------------------------------------------- |
+| `references/async-concurrency.md`  | Cross-cutting concurrency patterns                   |
+| `references/protocol-oriented.md`  | Protocol hierarchies, associated types, existentials |
+| `references/memory-performance.md` | Value vs reference semantics, ARC, retain cycles     |
+| `references/swiftui-patterns.md`   | Additional SwiftUI architectural guidance            |
 
-- Read `~/.claude/skills/swiftui-performance-audit/SKILL.md` for performance audit workflow
-- Reference performance-specific checks when reviewing view code
-- Apply recommendations from the skill to performance-sensitive paths
+### 5. swiftui-ui-patterns · `skills/swiftui-ui-patterns/`
 
-### 4. swiftui-ui-patterns
+**When to use:** Navigation, sheets, TabView, theming, async state, focus, grids, lists, macOS menus
 
-**When to Use:** Reviewing navigation architecture, sheet/modal routing, TabView setup, theming, async state management, focus handling, or API client patterns
+**Key references:**
 
-**What it Provides:**
-
-- Navigation architecture (route enums, RouterPath, centralized navigationDestination)
-- Sheet/modal routing (item-driven sheets, SheetDestination enum)
-- TabView with independent per-tab navigation history
-- Theming with semantic colors via `@Environment(Theme.self)`
-- Async state patterns (`.task(id:)`, LoadState enum, CancellationError handling)
-- Focus chaining with FocusField enum and `.onSubmit`
-- Lightweight API client pattern (closure-based structs, `.live()` / `.mock()` factories)
-
-**How to Leverage:**
-
-- Read `~/.claude/skills/swiftui-ui-patterns/references/navigation.md` for route enum and RouterPath checks
-- Reference `sheets-modals.md` for sheet routing validation
-- Use `theming.md` for semantic color enforcement
+| File                             | When to consult                                           |
+| -------------------------------- | --------------------------------------------------------- |
+| `references/navigationstack.md`  | Route enums, RouterPath, `navigationDestination`          |
+| `references/sheets.md`           | Item-driven sheets, SheetDestination enum                 |
+| `references/theming.md`          | Semantic color enforcement via `@Environment(Theme.self)` |
+| `references/async-state.md`      | `.task(id:)`, LoadState enum, CancellationError           |
+| `references/components-index.md` | Full component catalogue — start here for any UI pattern  |
 
 **Integration Strategy:**
 
-1. Load relevant reference files from these skills as needed
-2. Apply their checklist items to the review
-3. Reference their documentation in feedback
-4. Avoid duplicating content—point to their knowledge base
+1. When a review finding maps to a category above, read the relevant reference file before writing the finding.
+2. Cite the bundled reference in your feedback so developers can read the rationale.
+3. Do not duplicate content from these files — link or summarise.
 
 ## Platform Support
 

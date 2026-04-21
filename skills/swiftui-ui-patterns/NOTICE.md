@@ -1,0 +1,18 @@
+# swiftui-ui-patterns — Attribution Notice
+
+Bundled into `swift-code-reviewer-skill` on 2026-04-21 from
+`~/.maestro/skills/swiftui-ui-patterns`.
+
+Primary author (best-effort attribution): **Thomas Ricouard ([@Dimillian](https://github.com/Dimillian))**
+Also credited: [@AvdLee](https://github.com/AvdLee), [@bocato](https://github.com/bocato)
+
+These three authors' public Swift/SwiftUI content — including IceCubesApp, SwiftLee,
+and their various open-source contributions — informed the skills bundled here.
+
+License: the upstream folder did not contain a LICENSE file at the time of vendoring.
+Content is reproduced here in good faith for reference alongside this MIT-licensed
+project. If you are an upstream author and want the attribution corrected, the license
+clarified, or the content removed, please open an issue at:
+https://github.com/Viniciuscarvalho/swift-code-reviewer-skill/issues
+
+Changes from upstream: none (verbatim copy; `.DS_Store` files excluded).

@@ -1,5 +1,29 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **Bundled companion skills** under `skills/` — five Swift/SwiftUI knowledge bases now ship in-tree:
+  - `swiftui-expert-skill` — SwiftUI state management, view composition, Liquid Glass, macOS patterns ([@Dimillian](https://github.com/Dimillian))
+  - `swift-concurrency` — actors, Sendable, async/await, Swift 6 migration ([@AvdLee](https://github.com/AvdLee))
+  - `swift-testing` — Swift Testing framework, test doubles, snapshots, XCTest migration ([@AvdLee](https://github.com/AvdLee))
+  - `swift-expert` — Swift 6+ specialist: protocols, memory, concurrency, architecture ([@bocato](https://github.com/bocato))
+  - `swiftui-ui-patterns` — 32 component-level SwiftUI pattern references ([@Dimillian](https://github.com/Dimillian))
+- `skills/README.md` — full index with attribution table and update instructions
+- `NOTICE.md` per bundled skill with primary-author attribution and license note
+- `bundledSkills` array in `skill.json` for tooling enumeration
+
+### Changed
+
+- `SKILL.md` "Integration with Existing Skills" section replaced by "Bundled Companion Skills" — cross-references now point to in-tree `skills/<name>/references/` paths instead of external `~/.claude/skills/` paths
+- README "Integration with Other Skills" replaced by "Bundled Companion Skills" section showing directory layout, author credits, and per-skill links
+- `package.json` `files` array now includes `skills/` so bundled skills ship in the npm tarball
+
+### Fixed
+
+- Resolves [#1](https://github.com/Viniciuscarvalho/swift-code-reviewer-skill/issues/1): swift-best-practices resource location — companion knowledge bases are now bundled directly in the repo
+
 All notable changes to the Swift Code Reviewer Agent Skill will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

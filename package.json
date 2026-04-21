@@ -41,6 +41,7 @@
   "files": [
     "bin/",
     "references/",
+    "skills/",
     "templates/",
     "SKILL.md",
     "README.md",

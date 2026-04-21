@@ -172,9 +172,33 @@ npx swift-code-reviewer-skill uninstall
 
 </details>
 
-## Integration with Other Skills
+## Bundled Companion Skills
 
-This skill optionally leverages **swift-best-practices**, **swiftui-expert-skill**, and **swiftui-performance-audit** for deeper analysis. It works independently with its own comprehensive checklists.
+This repo ships five companion skills under `skills/` so you get a complete, self-contained knowledge base after a single install — no extra steps required.
+
+```
+skills/
+├── README.md                    ← full index + attribution
+├── swiftui-expert-skill/        ← SwiftUI state, Liquid Glass, macOS patterns
+├── swift-concurrency/           ← actors, Sendable, Swift 6 migration
+├── swift-testing/               ← Swift Testing framework, doubles, snapshots
+├── swift-expert/                ← Swift 6+ specialist: protocols, memory, architecture
+└── swiftui-ui-patterns/         ← 32 component references (nav, sheets, grids…)
+```
+
+The reviewer's `SKILL.md` points to specific reference files inside each skill, so during a review Claude can read the exact guidance it needs without any extra configuration.
+
+### Thanks to the original authors
+
+The bundled skills are based on the public Swift/SwiftUI work of:
+
+| Author              | GitHub                                     |
+| ------------------- | ------------------------------------------ |
+| Antoine van der Lee | [@AvdLee](https://github.com/AvdLee)       |
+| Thomas Ricouard     | [@Dimillian](https://github.com/Dimillian) |
+| Eduardo Bocato      | [@bocato](https://github.com/bocato)       |
+
+Each skill folder contains a `NOTICE.md` with attribution details. Upstream folders carried no `LICENSE` or `AUTHORS` files — if you are an original author and want attribution updated or content removed, please [open an issue](https://github.com/Viniciuscarvalho/swift-code-reviewer-skill/issues).
 
 ## Contributing
 
