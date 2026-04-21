@@ -5,548 +5,158 @@ description: "Multi-layer code review agent for Swift and SwiftUI projects. Anal
 
 # Swift/SwiftUI Code Review Skill
 
-## Overview
+Multi-layer review covering Swift 6+ concurrency, SwiftUI patterns, performance, security, architecture, and project-specific standards. Reads `.claude/CLAUDE.md` and outputs Critical/High/Medium/Low severity findings with `file:line` references and before/after code examples.
 
-This skill provides comprehensive code review capabilities for Swift and SwiftUI projects, combining Apple's best practices with project-specific coding standards. It performs multi-layer analysis covering code quality, architecture, performance, security, and maintainability.
+## Workflow
 
-### Key Capabilities
+### Phase 1 — Context Gathering
 
-- **Project-Aware Reviews**: Reads `.claude/CLAUDE.md` and related architecture documents to validate against project-specific standards
-- **Multi-Layer Analysis**: Combines Swift 6+ best practices, SwiftUI patterns, performance optimization, and security checks
-- **Comprehensive Feedback**: Provides Critical/High/Medium/Low severity issues, positive feedback, and refactoring suggestions
-- **Integration with Existing Skills**: Leverages `swift-best-practices`, `swiftui-expert-skill`, and `swiftui-performance-audit` for domain expertise
-- **Actionable Output**: Structured feedback with file:line references, code examples, and prioritized action items
+1. Try to load `.claude/CLAUDE.md`.
+   - **If missing**: add a note to the report — _"No project standards file found — review uses default Apple guidelines"_ — then continue.
+2. Obtain the changeset: `git diff`, `git diff --cached`, or `gh pr diff <n>`.
+   - **If diff is empty**: stop and ask the user to specify files, a PR number, or a directory.
+3. Read each changed file plus key related files (imports, protocols it conforms to, corresponding test file if present).
 
-## When to Use This Skill
+### Phase 2 — Analysis
 
-Use this skill when you need to:
+For each category, load the reference file before writing findings:
 
-- Review Pull Requests or Merge Requests for Swift/SwiftUI projects
-- Perform code quality audits on existing codebases
-- Validate code changes against project-specific standards
-- Analyze individual Swift/SwiftUI files for best practices
-- Review uncommitted git changes before committing
-- Assess architecture and maintainability of Swift code
-- Provide structured feedback to team members
+1. **Swift Quality** — concurrency, error handling, optionals, naming → `references/swift-quality-checklist.md`; for concurrency findings also read `skills/swift-concurrency/references/sendable.md` and `actors.md`
+2. **SwiftUI Patterns** — property wrappers, state management, deprecated APIs → `references/swiftui-review-checklist.md`; for wrapper selection read `skills/swiftui-expert-skill/references/state-management.md`
+3. **Performance** — view body cost, ForEach identity, lazy loading, retain cycles → `references/performance-review.md`
+4. **Security** — force unwraps, Keychain vs UserDefaults, input validation, no secrets in logs → `references/security-checklist.md`
+5. **Architecture** — MVVM/MVI/TCA compliance, DI, testability → `references/architecture-patterns.md`
+6. **Project Standards** — validate against `.claude/CLAUDE.md` rules → `references/custom-guidelines.md`
 
-**Trigger patterns:**
+For test file findings, consult `skills/swift-testing/references/test-organization.md`.
+For navigation/routing findings, consult `skills/swiftui-ui-patterns/references/navigationstack.md`.
 
-- "Review this PR"
-- "Review [filename].swift"
-- "Review my changes"
-- "Code review for [component]"
-- "Check if this follows our coding standards"
-- "Review against .claude/CLAUDE.md"
+### Phase 3 — Report
 
-## Review Workflow
+Group findings by file → sort by severity within each file → write prioritized action items.
 
-The skill follows a **four-phase workflow** to ensure comprehensive and actionable feedback:
+Severity: **Critical** (crash/data race/security hole) · **High** (anti-pattern/major arch violation) · **Medium** (quality/maintainability) · **Low** (style/suggestion).
 
-### Phase 1: Context Gathering
+Include one-sentence positive feedback where code is notably well-written. Never pad with generic praise.
 
-**Objective**: Understand the project context and scope of review
+## Concrete Finding Examples
 
-1. **Read Project Guidelines**
-   - Load `.claude/CLAUDE.md` if it exists in the repository
-   - Read related architecture documents (e.g., `DependencyInjection-Architecture.md`, `Design System Structure.md`)
-   - Extract custom coding standards, patterns, and rules
+### Force Unwrap → guard let (Critical)
 
-2. **Identify Review Scope**
-   - Determine files to review:
-     - User-specified files
-     - Git diff (uncommitted or PR/MR changes)
-     - Modified files in a specific directory
-   - Categorize changes by type (UI, logic, tests, configuration)
+**`LoginViewModel.swift:89`** — Current:
 
-3. **Gather File Context**
-   - Read all files that will be reviewed
-   - Understand the broader context (related files, dependencies)
-   - Identify the purpose and role of each component
-
-### Phase 2: Automated Analysis
-
-**Objective**: Run parallel checks across multiple quality dimensions
-
-Execute checks across **six core categories**:
-
-#### 1. Swift Best Practices
-
-Reference: `swift-best-practices` skill knowledge base
-
-- **Concurrency Safety**
-  - Actor isolation correctness
-  - MainActor usage for UI code
-  - Sendable conformance
-  - Data race prevention
-  - Async/await patterns
-
-- **API Design**
-  - Naming conventions (Swift API Design Guidelines)
-  - Parameter labels clarity
-  - Return type appropriateness
-  - Error handling (typed throws)
-
-- **Language Features**
-  - Availability attributes for new APIs
-  - Migration to Swift 6 features
-  - Avoiding deprecated patterns
-  - Proper use of optionals
-
-#### 2. SwiftUI Quality
-
-Reference: `swiftui-expert-skill` knowledge base
-
-- **State Management**
-  - Correct property wrapper selection (@Observable, @State, @Binding, @Environment)
-  - State ownership and data flow
-  - Avoiding unnecessary state
-  - View model patterns
-
-- **Modern API Usage**
-  - Replace deprecated APIs with modern equivalents
-  - Use latest SwiftUI features (iOS 17+, macOS 14+)
-  - Proper use of view modifiers
-  - Composition over inheritance
-
-- **View Composition**
-  - View extraction appropriateness
-  - Component reusability
-  - View hierarchy depth
-  - Subview organization
-
-- **Accessibility**
-  - Accessibility labels and hints
-  - VoiceOver support
-  - Dynamic Type support
-  - Keyboard navigation
-
-#### 3. Performance
-
-Reference: `swiftui-performance-audit` knowledge base
-
-- **View Optimization**
-  - Unnecessary view updates
-  - Heavy computation in body
-  - Equatable conformance for view models
-  - Lazy loading patterns
-
-- **List Performance**
-  - ForEach identity stability
-  - Cell reuse patterns
-  - Scroll performance
-  - Large dataset handling
-
-- **Layout Efficiency**
-  - Layout thrash detection
-  - GeometryReader overuse
-  - Frame calculations
-  - Animation performance
-
-- **Resource Management**
-  - Image loading and caching
-  - Memory leaks (retain cycles)
-  - Background task management
-  - Network request optimization
-
-#### 4. Security & Safety
-
-- **Data Validation**
-  - Input sanitization
-  - Type safety
-  - Boundary checking
-  - Force unwrap audit (avoid `!` and `as!`)
-
-- **Sensitive Data Handling**
-  - Password and token management
-  - Keychain usage for credentials
-  - Secure data transmission
-  - Log sanitization (no sensitive data in logs)
-
-- **Platform Security**
-  - Permission handling (camera, location, etc.)
-  - Network security (TLS, certificate pinning)
-  - Secure storage (UserDefaults vs Keychain)
-  - Code signing and entitlements
-
-#### 5. Architecture & Maintainability
-
-- **Project Architecture Compliance**
-  - Adherence to defined patterns (MVVM, MVI, TCA, etc.)
-  - Layer separation (View/ViewModel/Repository/UseCase)
-  - Dependency injection patterns
-  - Module boundaries
-
-- **Code Organization**
-  - File structure and naming
-  - Logical grouping
-  - Extension organization
-  - Protocol conformances
-
-- **Testability**
-  - Unit test coverage
-  - Test structure (Arrange-Act-Assert)
-  - Mock/stub usage
-  - Test isolation
-
-- **Documentation**
-  - DocC comments for public APIs
-  - Complex logic explanations
-  - Architecture decision records
-  - README and guides
-
-#### 6. Project-Specific Standards
-
-- **Custom Coding Standards**
-  - Validate against `.claude/CLAUDE.md` rules
-  - Check custom error handling patterns
-  - Verify project-specific naming conventions
-  - Validate testing requirements
-
-- **Design System Compliance**
-  - Use of design tokens
-  - Consistent spacing and typography
-  - Color palette adherence
-  - Component library usage
-
-- **Navigation Patterns**
-  - Coordinator pattern compliance
-  - Deep linking support
-  - State restoration
-  - Navigation flow consistency
-
-### Phase 3: Report Generation
-
-**Objective**: Aggregate findings into a structured, actionable report
-
-1. **Categorize Findings by Severity**
-   - **Critical**: Security vulnerabilities, data races, crashes, breaking changes
-   - **High**: Performance issues, anti-patterns, major architecture violations
-   - **Medium**: Code quality improvements, missing documentation, minor violations
-   - **Low**: Style inconsistencies, suggestions for refactoring
-
-2. **Include Positive Feedback**
-   - Acknowledge good practices and patterns
-   - Highlight excellent code quality
-   - Recognize proper use of modern APIs
-   - Note strong architecture decisions
-
-3. **Add Refactoring Suggestions**
-   - Proactive improvement opportunities
-   - Modernization suggestions
-   - Code simplification ideas
-   - Performance optimization hints
-
-4. **Group and Organize**
-   - Group by file, then by category
-   - Sort by severity within each file
-   - Include code location references (file:line)
-   - Provide specific code examples
-
-### Phase 4: Delivery
-
-**Objective**: Present findings in a clear, actionable format
-
-1. **Format as Structured Markdown**
-   - Executive summary with key metrics
-   - Severity breakdown
-   - File-by-file detailed findings
-   - Positive feedback section
-   - Prioritized action items
-
-2. **Include Code References**
-   - Exact file and line numbers (file.swift:123)
-   - Before/after code examples
-   - Links to relevant documentation
-   - Comparison with project guidelines
-
-3. **Provide Context**
-   - Explain _why_ something is an issue
-   - Reference best practices or standards
-   - Suggest specific fixes with examples
-   - Link to learning resources
-
-## Core Review Categories
-
-Each category has a dedicated reference file with full checklists:
-
-1. **Swift Language Quality** — concurrency, error handling, optionals, access control, naming (`references/swift-quality-checklist.md`)
-2. **SwiftUI Patterns** — property wrappers, state management, modern APIs, accessibility (`references/swiftui-review-checklist.md`)
-3. **Performance** — view updates, ForEach identity, lazy loading, memory management (`references/performance-review.md`)
-4. **Security & Safety** — force unwrap detection, input validation, Keychain, network security (`references/security-checklist.md`)
-5. **Architecture & Design** — MVVM/MVI/TCA compliance, dependency injection, testability (`references/architecture-patterns.md`)
-6. **Project-Specific Standards** — `.claude/CLAUDE.md` compliance, design system, navigation patterns (`references/custom-guidelines.md`)
-
-## Integration with Existing Skills
-
-This skill **references** (not duplicates) three foundational skills for domain expertise:
-
-### 1. swift-best-practices
-
-**When to Use:** Reviewing Swift language usage, concurrency patterns, API design, or Swift 6+ migration
-
-**What it Provides:**
-
-- Swift 6+ concurrency patterns (actors, async/await, Sendable)
-- API design guidelines compliance
-- Availability pattern validation
-- Breaking changes detection
-- Modern Swift feature adoption
-
-**How to Leverage:**
-
-- Read `~/.claude/skills/swift-best-practices/references/concurrency.md` for concurrency checks
-- Reference `swift6-features.md` for Swift 6 migration patterns
-- Use `api-design.md` for naming and parameter validation
-
-### 2. swiftui-expert-skill
-
-**When to Use:** Reviewing SwiftUI views, state management, or UI code
-
-**What it Provides:**
-
-- State management patterns (@Observable, @State, @Binding)
-- Modern SwiftUI API guidance (iOS 17+, macOS 14+)
-- View composition best practices
-- Property wrapper selection guide
-- Accessibility patterns
-
-**How to Leverage:**
-
-- Read `~/.claude/skills/swiftui-expert-skill/references/state-management.md` for property wrapper checks
-- Reference `modern-apis.md` for deprecation detection
-- Use `view-composition.md` for component structure validation
-
-### 3. swiftui-performance-audit
-
-**When to Use:** Performance concerns identified or mentioned in PR description
-
-**What it Provides:**
-
-- View update optimization patterns
-- ForEach performance analysis
-- Layout thrash detection
-- Image handling best practices
-- Memory management
-
-**How to Leverage:**
-
-- Read `~/.claude/skills/swiftui-performance-audit/SKILL.md` for performance audit workflow
-- Reference performance-specific checks when reviewing view code
-- Apply recommendations from the skill to performance-sensitive paths
-
-### 4. swiftui-ui-patterns
-
-**When to Use:** Reviewing navigation architecture, sheet/modal routing, TabView setup, theming, async state management, focus handling, or API client patterns
-
-**What it Provides:**
-
-- Navigation architecture (route enums, RouterPath, centralized navigationDestination)
-- Sheet/modal routing (item-driven sheets, SheetDestination enum)
-- TabView with independent per-tab navigation history
-- Theming with semantic colors via `@Environment(Theme.self)`
-- Async state patterns (`.task(id:)`, LoadState enum, CancellationError handling)
-- Focus chaining with FocusField enum and `.onSubmit`
-- Lightweight API client pattern (closure-based structs, `.live()` / `.mock()` factories)
-
-**How to Leverage:**
-
-- Read `~/.claude/skills/swiftui-ui-patterns/references/navigation.md` for route enum and RouterPath checks
-- Reference `sheets-modals.md` for sheet routing validation
-- Use `theming.md` for semantic color enforcement
-
-**Integration Strategy:**
-
-1. Load relevant reference files from these skills as needed
-2. Apply their checklist items to the review
-3. Reference their documentation in feedback
-4. Avoid duplicating content—point to their knowledge base
-
-## Platform Support
-
-### GitHub Pull Requests
-
-Use `gh` CLI for fetching PR data:
-
-```bash
-# Get PR details
-gh pr view <PR-number>
-
-# Get PR diff
-gh pr diff <PR-number>
-
-# List PR files
-gh pr view <PR-number> --json files
-
-# Get PR comments
-gh pr view <PR-number> --json comments
+```swift
+let user = repository.currentUser!
 ```
 
-### GitLab Merge Requests
+**Finding**: crashes if `currentUser` is `nil` (e.g., after sign-out race condition).
 
-Use `glab` CLI for fetching MR data:
+**Fix**:
 
-```bash
-# Get MR details
-glab mr view <MR-number>
-
-# Get MR diff
-glab mr diff <MR-number>
-
-# List MR files
-glab mr view <MR-number> --json
-
-# Get MR comments
-glab mr note list <MR-number>
+```swift
+guard let user = repository.currentUser else {
+    logger.error("currentUser nil — aborting login flow")
+    return
+}
 ```
 
-### Local Git Changes
+---
 
-For uncommitted changes or manual review:
+### Missing @MainActor on UI-bound ViewModel (High)
 
-```bash
-# Get uncommitted changes
-git diff
+**`FeedViewModel.swift:12`** — Current:
 
-# Get staged changes
-git diff --cached
+```swift
+class FeedViewModel: ObservableObject {
+    @Published var posts: [Post] = []
 
-# Get changes in specific files
-git diff -- path/to/file.swift
-
-# Get commit diff
-git show <commit-hash>
+    func load() async {
+        posts = try? await api.fetchPosts()  // ⚠️ mutates @Published off main thread
+    }
+}
 ```
+
+**Finding**: `@Published` mutations must happen on the main actor in Swift 6 strict concurrency; this is a data race.
+
+**Fix**:
+
+```swift
+@MainActor
+@Observable
+final class FeedViewModel {
+    var posts: [Post] = []
+
+    func load() async throws {
+        posts = try await api.fetchPosts()  // safe: whole class is @MainActor-isolated
+    }
+}
+```
+
+Also migrate from `ObservableObject`/`@Published` to `@Observable` (iOS 17+) — see `skills/swiftui-expert-skill/references/state-management.md`.
 
 ## Output Format
 
-The review report is structured markdown with these sections:
-
-1. **Summary** — files reviewed, finding counts by severity (Critical/High/Medium/Low), positive feedback count
-2. **Executive Summary** — brief overview of changes and overall code quality
-3. **Detailed Findings** — grouped by file, then by severity, each with:
-   - Severity and category labels
-   - Issue description with file:line reference
-   - Before/after code examples
-   - Reference to relevant checklist or standard
-4. **Positive Feedback** — good practices and patterns observed
-5. **Prioritized Action Items** — must fix (Critical/High), should fix (Medium), consider (Low) as checklists
-
-See `references/feedback-templates.md` for full templates and severity classification guidelines.
-
-## How to Use
-
-### Example 1: Review Specific File
-
 ```
-User: "Review UserProfileView.swift"
+# Code Review — <scope>
 
-Steps:
-1. Read .claude/CLAUDE.md for project standards
-2. Read UserProfileView.swift
-3. Run multi-layer analysis
-4. Provide structured feedback with severity levels and positive feedback
+## Summary
+Files: N | Critical: N | High: N | Medium: N | Low: N
+
+## <Filename.swift>
+
+[Severity] **<Category>** (line N)
+Current: `<problematic snippet>`
+Fix: <explanation + corrected snippet>
+
+## Positive Observations
+...
+
+## Prioritized Action Items
+- [Must fix] ...
+- [Should fix] ...
+- [Consider] ...
 ```
 
-### Example 2: Review Git Changes
+Full templates and severity classification: `references/feedback-templates.md`.
 
-```
-User: "Review my uncommitted changes"
+## Companion Skills
 
-Steps:
-1. Read .claude/CLAUDE.md
-2. Execute `git diff` to get changes
-3. Identify modified files
-4. Run analysis on each file
-5. Generate comprehensive review report
-```
+Full reference tables (all files, when to consult each): `references/companion-skills.md`.
 
-### Example 3: Review Pull Request
+| Skill                          | Use for                                                    |
+| ------------------------------ | ---------------------------------------------------------- |
+| `skills/swiftui-expert-skill/` | SwiftUI state, Liquid Glass, macOS patterns, accessibility |
+| `skills/swift-concurrency/`    | Actors, Sendable, Swift 6 migration, async/await           |
+| `skills/swift-testing/`        | Swift Testing framework, test doubles, snapshots           |
+| `skills/swift-expert/`         | Swift 6+ patterns, protocols, memory, SPM                  |
+| `skills/swiftui-ui-patterns/`  | Navigation, sheets, theming, async state, grids            |
 
-```
-User: "Review PR #123"
+## Platform Commands
 
-Steps:
-1. Read .claude/CLAUDE.md
-2. Execute `gh pr view 123` and `gh pr diff 123`
-3. Identify changed files
-4. Read affected files for context
-5. Run multi-layer analysis
-6. Generate report with file:line references
-```
+```bash
+# GitHub PR
+gh pr diff <n>
+gh pr view <n> --json files,comments
 
-### Example 4: Review Against Custom Guidelines
+# GitLab MR
+glab mr diff <n>
+glab mr view <n> --json
 
-```
-User: "Review LoginViewModel.swift against our coding standards"
-
-Steps:
-1. Read .claude/CLAUDE.md
-2. Read related docs (DependencyInjection-Architecture.md)
-3. Read LoginViewModel.swift
-4. Validate against project-specific patterns
-5. Provide detailed feedback comparing with standards
+# Local changes
+git diff             # unstaged
+git diff --cached    # staged
+git diff HEAD~1      # last commit
+git diff -- path/to/file.swift
 ```
 
-### Example 5: Review Multiple Files
+## Reference Files
 
-```
-User: "Review all ViewModels in the Features folder"
-
-Steps:
-1. Read .claude/CLAUDE.md
-2. Find all *ViewModel.swift files in Features/
-3. Analyze each against architecture patterns
-4. Provide file-by-file review
-5. Summarize common patterns and issues across all files
-```
-
-### Example 6: Review Navigation / Routing Code
-
-```
-User: "Review our navigation setup and routing code"
-
-Steps:
-1. Read .claude/CLAUDE.md for project navigation patterns
-2. Read router/coordinator files (RouterPath, AppCoordinator, TabRouter)
-3. Read root views that set up NavigationStack and TabView
-4. Run navigation architecture checks:
-   - Route destinations use typed Hashable enum (not String/Int)
-   - RouterPath @Observable owns path (not ad-hoc @State)
-   - Single centralized .navigationDestination per stack
-   - .sheet(item:) preferred over .sheet(isPresented:) when model selected
-   - Multiple sheets use SheetDestination enum (not multiple booleans)
-   - Each tab has independent RouterPath (not shared)
-   - .onOpenURL at app root, not scattered in feature views
-5. Run async state checks:
-   - .task(id:) for input-driven async work
-   - CancellationError silenced
-   - LoadState<T> enum instead of multiple booleans
-6. Generate report with navigation-specific findings
-```
-
-## Resources
-
-This skill includes the following reference materials:
-
-### Core References
-
-- **review-workflow.md**: Detailed step-by-step review process, git commands, and diff parsing strategies
-- **feedback-templates.md**: Templates for positive/negative comments, severity classification guidelines
-
-### Quality Checklists
-
-- **swift-quality-checklist.md**: Swift 6+ concurrency, error handling, optionals, access control, naming
-- **swiftui-review-checklist.md**: Property wrappers, state management, modern APIs, view composition
-- **performance-review.md**: View updates, ForEach optimization, layout efficiency, resource management
-- **security-checklist.md**: Input validation, sensitive data, keychain, network security
-
-### Architecture & Customization
-
-- **architecture-patterns.md**: MVVM, MVI, TCA patterns, dependency injection, testing strategies
-- **custom-guidelines.md**: How to read and parse .claude/CLAUDE.md and project-specific standards
-
-## Limitations
-
-- Static analysis only — cannot execute code, run tests, or profile runtime performance
-- Limited to code accessible via git or provided directly
-- For runtime analysis, use Instruments or other profiling tools
+- `references/review-workflow.md` — detailed process, diff parsing, git commands
+- `references/feedback-templates.md` — output templates, severity classification
+- `references/swift-quality-checklist.md` — Swift 6+, concurrency, optionals, naming
+- `references/swiftui-review-checklist.md` — property wrappers, state, modern APIs
+- `references/performance-review.md` — view optimization, ForEach, resource management
+- `references/security-checklist.md` — input validation, Keychain, network security
+- `references/architecture-patterns.md` — MVVM/MVI/TCA, DI, testability
+- `references/custom-guidelines.md` — parsing `.claude/CLAUDE.md`
+- `references/companion-skills.md` — full companion skill tables

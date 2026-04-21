@@ -69,6 +69,38 @@
     "Performance audit",
     "Security review"
   ],
+  "bundledSkills": [
+    {
+      "name": "swiftui-expert-skill",
+      "path": "skills/swiftui-expert-skill",
+      "primaryAuthor": "Dimillian",
+      "authorUrl": "https://github.com/Dimillian"
+    },
+    {
+      "name": "swift-concurrency",
+      "path": "skills/swift-concurrency",
+      "primaryAuthor": "AvdLee",
+      "authorUrl": "https://github.com/AvdLee"
+    },
+    {
+      "name": "swift-testing",
+      "path": "skills/swift-testing",
+      "primaryAuthor": "AvdLee",
+      "authorUrl": "https://github.com/AvdLee"
+    },
+    {
+      "name": "swift-expert",
+      "path": "skills/swift-expert",
+      "primaryAuthor": "bocato",
+      "authorUrl": "https://github.com/bocato"
+    },
+    {
+      "name": "swiftui-ui-patterns",
+      "path": "skills/swiftui-ui-patterns",
+      "primaryAuthor": "Dimillian",
+      "authorUrl": "https://github.com/Dimillian"
+    }
+  ],
   "relatedSkills": [
     "swift-best-practices",
     "swiftui-expert-skill",
