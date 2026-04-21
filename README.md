@@ -13,6 +13,12 @@ A code review skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-
 npx skills add Viniciuscarvalho/swift-code-reviewer-skill
 ```
 
+To update to the latest version later:
+
+```bash
+npx swift-code-reviewer-skill@latest
+```
+
 ### 2. Add the review agent to your project (optional)
 
 ```bash
@@ -160,6 +166,17 @@ npx swift-code-reviewer-skill
 ```bash
 git clone https://github.com/Viniciuscarvalho/swift-code-reviewer-skill.git ~/.claude/skills/swift-code-reviewer-skill
 ```
+
+</details>
+
+<details>
+<summary>Update to latest version</summary>
+
+```bash
+npx swift-code-reviewer-skill@latest
+```
+
+This replaces the existing `~/.claude/skills/swift-code-reviewer-skill/` with the latest files.
 
 </details>
 

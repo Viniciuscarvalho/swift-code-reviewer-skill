@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-04-21
+
+### Fixed
+
+- `bin/install.js` now copies `skills/` and `templates/` directories during install — companion skill references in `SKILL.md` and `init` command templates were silently missing from `~/.claude/skills/` after install
+
 ## [1.2.0] - 2026-04-21
 
 ### Added
@@ -107,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **1.2.1** (2026-04-21): Fix installer not copying `skills/` and `templates/` directories
 - **1.2.0** (2026-04-21): Bundle five companion Swift skills, add `init` scaffolding command, skill-review CI action, SKILL.md condensed 71%
 - **1.1.1** (2026-03-24): Fix incorrect `install-skill.sh` (was XcodeBuildMCP installer)
 - **1.1.0** (2026-03-16): Increase adjusts from Dimillian skill and more scenarios to cover
