@@ -1,23 +1,6 @@
 ---
 name: swift-code-reviewer
-description: >
-  Multi-layer code review agent for Swift and SwiftUI projects. Analyzes PRs,
-  diffs, and files across six dimensions: Swift 6+ concurrency safety, SwiftUI
-  state management and modern APIs, performance (view updates, ForEach identity,
-  lazy loading), security (force unwraps, Keychain, input validation), architecture
-  compliance (MVVM/MVI/TCA, dependency injection), and project-specific standards
-  from .claude/CLAUDE.md. Outputs structured reports with Critical/High/Medium/Low
-  severity, positive feedback, and prioritized action items with file:line
-  references and before/after code examples.
-
-  ALWAYS use this skill when the user says "review this PR", "review my code",
-  "review my changes", "check this file", "code review", "review against our
-  standards", "audit this codebase", "check code quality", mentions reviewing
-  any .swift file, asks about Swift best practices violations in existing code,
-  or wants feedback on Swift/SwiftUI code — even if they don't explicitly say
-  "code review". Also trigger when the user asks to "check if this follows our
-  coding standards", "review uncommitted changes", "review all ViewModels",
-  or mentions reviewing navigation, sheets, theming, or async patterns in Swift.
+description: "Multi-layer code review agent for Swift and SwiftUI projects. Analyzes PRs, diffs, and files across six dimensions: Swift 6+ concurrency safety, SwiftUI state management and modern APIs, performance (view updates, ForEach identity, lazy loading), security (force unwraps, Keychain, input validation), architecture compliance (MVVM/MVI/TCA, dependency injection), and project-specific standards from .claude/CLAUDE.md. Outputs structured reports with Critical/High/Medium/Low severity, positive feedback, and prioritized action items with file:line references. Use when the user says review this PR, review my code, review my changes, check this file, code review, audit this codebase, check code quality, review uncommitted changes, review all ViewModels, or mentions reviewing .swift files, navigation, sheets, theming, or async patterns."
 ---
 
 # Swift/SwiftUI Code Review Skill
@@ -284,88 +267,14 @@ Reference: `swiftui-performance-audit` knowledge base
 
 ## Core Review Categories
 
-### 1. Swift Language Quality
+Each category has a dedicated reference file with full checklists:
 
-**What to Check:**
-
-- Concurrency patterns (actors, async/await, Sendable)
-- Error handling (typed throws, Result type)
-- Optionals handling (avoid force unwrapping)
-- Access control (public, internal, private, fileprivate)
-- Naming conventions (Swift API Design Guidelines)
-- Type inference vs explicit types
-- Value types vs reference types
-
-**Reference:** `references/swift-quality-checklist.md`
-
-### 2. SwiftUI Patterns
-
-**What to Check:**
-
-- Property wrapper selection and usage
-- State management patterns
-- View lifecycle understanding
-- Modern API usage (avoid deprecated)
-- View composition and extraction
-- Accessibility implementation
-- Preview configurations
-
-**Reference:** `references/swiftui-review-checklist.md`
-
-### 3. Performance Optimization
-
-**What to Check:**
-
-- View update optimization
-- ForEach identity and performance
-- Heavy work in view body
-- Image loading and caching
-- Memory management
-- Background task efficiency
-- Layout performance
-
-**Reference:** `references/performance-review.md`
-
-### 4. Security & Safety
-
-**What to Check:**
-
-- Force unwrap detection (`!`, `as!`, `try!`)
-- Input validation and sanitization
-- Sensitive data handling (passwords, tokens)
-- Keychain usage for credentials
-- Network security (HTTPS, certificate pinning)
-- Permission handling
-- Logging safety (no sensitive data in logs)
-
-**Reference:** `references/security-checklist.md`
-
-### 5. Architecture & Design
-
-**What to Check:**
-
-- MVVM, MVI, TCA, or other architecture compliance
-- Dependency injection patterns
-- Separation of concerns
-- Module boundaries
-- Code organization
-- Testability
-- Documentation quality
-
-**Reference:** `references/architecture-patterns.md`
-
-### 6. Project-Specific Standards
-
-**What to Check:**
-
-- `.claude/CLAUDE.md` compliance
-- Custom architecture patterns
-- Design system usage
-- Navigation patterns
-- Error handling standards
-- Testing requirements
-
-**Reference:** `references/custom-guidelines.md`
+1. **Swift Language Quality** — concurrency, error handling, optionals, access control, naming (`references/swift-quality-checklist.md`)
+2. **SwiftUI Patterns** — property wrappers, state management, modern APIs, accessibility (`references/swiftui-review-checklist.md`)
+3. **Performance** — view updates, ForEach identity, lazy loading, memory management (`references/performance-review.md`)
+4. **Security & Safety** — force unwrap detection, input validation, Keychain, network security (`references/security-checklist.md`)
+5. **Architecture & Design** — MVVM/MVI/TCA compliance, dependency injection, testability (`references/architecture-patterns.md`)
+6. **Project-Specific Standards** — `.claude/CLAUDE.md` compliance, design system, navigation patterns (`references/custom-guidelines.md`)
 
 ## Integration with Existing Skills
 
@@ -510,127 +419,19 @@ git show <commit-hash>
 
 ## Output Format
 
-The review report follows this structure:
+The review report is structured markdown with these sections:
 
-````markdown
-# Code Review Report
+1. **Summary** — files reviewed, finding counts by severity (Critical/High/Medium/Low), positive feedback count
+2. **Executive Summary** — brief overview of changes and overall code quality
+3. **Detailed Findings** — grouped by file, then by severity, each with:
+   - Severity and category labels
+   - Issue description with file:line reference
+   - Before/after code examples
+   - Reference to relevant checklist or standard
+4. **Positive Feedback** — good practices and patterns observed
+5. **Prioritized Action Items** — must fix (Critical/High), should fix (Medium), consider (Low) as checklists
 
-## Summary
-
-- **Files Reviewed**: X
-- **Total Findings**: Y
-- **Critical**: 0
-- **High**: 2
-- **Medium**: 5
-- **Low**: 3
-- **Positive Feedback**: 8
-- **Refactoring Suggestions**: 4
-
-## Executive Summary
-
-[Brief overview of the changes and overall code quality]
-
----
-
-## Detailed Findings
-
-### File: Sources/Features/Login/LoginView.swift
-
-#### ✅ Positive Feedback
-
-1. **Excellent State Management** (line 23)
-   - Proper use of @Observable for view model
-   - Clean separation of concerns
-
-2. **Modern API Usage** (line 45)
-   - Using new SwiftUI APIs effectively
-   - Proper async/await integration
-
-#### 🔴 Critical Issues
-
-1. **Data Race Risk** (line 67)
-   - **Severity**: Critical
-   - **Category**: Concurrency
-   - **Issue**: Mutable state accessed from multiple actors without synchronization
-   - **Fix**:
-
-     ```swift
-     // Before
-     class LoginViewModel {
-         var isLoading = false
-     }
-
-     // After
-     @MainActor
-     class LoginViewModel: ObservableObject {
-         @Published var isLoading = false
-     }
-     ```
-
-   - **Reference**: swift-best-practices/references/concurrency.md
-
-#### 🟡 High Priority
-
-1. **Force Unwrap Detected** (line 89)
-   - **Severity**: High
-   - **Category**: Safety
-   - **Issue**: Force unwrapping optional can cause crash
-   - **Fix**:
-
-     ```swift
-     // Before
-     let user = fetchUser()!
-
-     // After
-     guard let user = fetchUser() else {
-         logger.error("Failed to fetch user")
-         return
-     }
-     ```
-
-   - **Reference**: Project coding standard (.claude/CLAUDE.md:45)
-
-#### 💡 Refactoring Suggestions
-
-1. **Extract Subview** (lines 120-150)
-   - Consider extracting login form into separate view
-   - Improves testability and reusability
-
----
-
-## Prioritized Action Items
-
-### Must Fix (Critical/High)
-
-1. [ ] Fix data race in LoginViewModel.swift:67
-2. [ ] Remove force unwrap in LoginView.swift:89
-
-### Should Fix (Medium)
-
-1. [ ] Add documentation to public APIs
-2. [ ] Improve error handling in NetworkService.swift
-
-### Consider (Low)
-
-1. [ ] Refactor login form into separate view
-2. [ ] Add more unit tests for edge cases
-
----
-
-## Positive Patterns Observed
-
-- Excellent use of @Observable for state management
-- Consistent adherence to project architecture (MVVM)
-- Comprehensive accessibility support
-- Strong error handling in most areas
-- Good test coverage for core functionality
-
-## References
-
-- [Swift Best Practices](~/.claude/skills/swift-best-practices/SKILL.md)
-- [SwiftUI Expert Guide](~/.claude/skills/swiftui-expert-skill/SKILL.md)
-- [Project Coding Standards](.claude/CLAUDE.md)
-````
+See `references/feedback-templates.md` for full templates and severity classification guidelines.
 
 ## How to Use
 
@@ -744,54 +545,8 @@ This skill includes the following reference materials:
 - **architecture-patterns.md**: MVVM, MVI, TCA patterns, dependency injection, testing strategies
 - **custom-guidelines.md**: How to read and parse .claude/CLAUDE.md and project-specific standards
 
-## Best Practices
-
-1. **Always Read Project Guidelines First**
-   - Load `.claude/CLAUDE.md` before starting review
-   - Understand project-specific patterns and rules
-   - Merge project standards with Apple guidelines
-
-2. **Provide Balanced Feedback**
-   - Include positive feedback for good practices
-   - Don't just criticize—acknowledge what's done well
-   - Suggest improvements, not just problems
-
-3. **Be Specific and Actionable**
-   - Include exact file:line references
-   - Provide code examples for fixes
-   - Explain _why_ something is an issue
-   - Link to relevant documentation
-
-4. **Prioritize by Severity**
-   - Critical: Must fix before merge (security, crashes, data races)
-   - High: Should fix before merge (anti-patterns, performance issues)
-   - Medium: Address soon (code quality, documentation)
-   - Low: Consider for future (style, refactoring suggestions)
-
-5. **Leverage Existing Skills**
-   - Reference swift-best-practices for language patterns
-   - Use swiftui-expert-skill for UI code
-   - Apply swiftui-performance-audit for performance concerns
-   - Don't duplicate their content—point to their knowledge
-
-6. **Focus on Education**
-   - Explain the reasoning behind feedback
-   - Link to learning resources
-   - Help developers understand best practices
-   - Foster continuous improvement
-
 ## Limitations
 
-- Cannot execute code or run tests (can only analyze statically)
-- Cannot access external systems or APIs
-- Limited to analyzing code provided or accessible via git
-- Cannot detect runtime issues that require execution
-- Performance analysis is based on patterns, not profiling data
-
-For runtime analysis, recommend using Instruments or other profiling tools.
-
-## Version
-
-**Version**: 1.2.0
-**Last Updated**: 2026-04-10
-**Compatible with**: Swift 6+, SwiftUI (iOS 17+, macOS 14+, watchOS 10+, tvOS 17+, visionOS 1+)
+- Static analysis only — cannot execute code, run tests, or profile runtime performance
+- Limited to code accessible via git or provided directly
+- For runtime analysis, use Instruments or other profiling tools
