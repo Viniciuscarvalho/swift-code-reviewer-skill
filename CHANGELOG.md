@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-05-07
+
+### Added
+
+- **Spec Adherence** — Phase 1 now reads the PR/issue description first via `gh pr view --json title,body,closingIssuesReferences,labels` (and `glab` equivalents); extracts acceptance criteria, edge cases, and out-of-scope items. New Phase 2 category `0. Spec Adherence` runs before Swift Quality and validates requirement coverage, scope discipline, missing work, and intent drift.
+- **Agent Loop Feedback** — new Phase 2.5 aggregates findings by rule and surfaces any rule firing **≥2 times** in the diff as a recurring pattern, drafting a directive-style rule suggestion suitable for `.claude/CLAUDE.md`. Escalates priority when the same rule was already suggested in past reviews of `.claude/CLAUDE.md` (checked via `git log`).
+- **Output Format** — Spec Adherence requirement-coverage table at the top (✅ / ⚠️ / ❌ / ➖ legend) and an Agent Loop Feedback section at the bottom with `Pattern: <name>` blocks.
+- **`When to Use This Skill`** trigger list, including spec-aware phrasings: _"Review this PR against the spec"_, _"Did the agent miss anything from issue #N?"_, _"What rules am I missing in CLAUDE.md based on this PR?"_, _"Review this AI-generated PR"_.
+- **`Limitations`** section in `SKILL.md` covering no-PR-context behavior and human-authored code framing.
+- `references/spec-adherence.md` — parsing `gh`/`glab` JSON, finding acceptance criteria (checkboxes / Gherkin / `must`/`should`), handling empty PRs, scope-creep vs adjacent-fix rubric, requirement coverage table template with status legend.
+- `references/agent-loop-feedback.md` — the ≥2 threshold rule, strong-vs-weak directive phrasing with side-by-side examples, how to `git log` `.claude/CLAUDE.md` for prior rules, suggested-rule block template, human-authored framing.
+
+### Changed
+
+- Frontmatter `description` rewritten to advertise spec-adherence and agent-loop meta-feedback so the skill triggers on those phrases (in addition to existing PR/diff/file review triggers).
+- `Reference Files` section in `SKILL.md` updated to link the two new reference docs.
+
 ## [1.2.1] - 2026-04-21
 
 ### Fixed
@@ -113,6 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **1.3.0** (2026-05-07): Add Spec Adherence (PR/issue intent validation) and Agent Loop Feedback (recurring-pattern detection → suggested CLAUDE.md rules); two new reference docs
 - **1.2.1** (2026-04-21): Fix installer not copying `skills/` and `templates/` directories
 - **1.2.0** (2026-04-21): Bundle five companion Swift skills, add `init` scaffolding command, skill-review CI action, SKILL.md condensed 71%
 - **1.1.1** (2026-03-24): Fix incorrect `install-skill.sh` (was XcodeBuildMCP installer)

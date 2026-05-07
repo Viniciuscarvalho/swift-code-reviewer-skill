@@ -1,6 +1,6 @@
 {
   "name": "swift-code-reviewer-skill",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Claude Code skill for comprehensive Swift/SwiftUI code reviews with multi-layer analysis",
   "keywords": [
     "claude",
