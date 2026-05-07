@@ -1,0 +1,15 @@
+description = "Run a full Swift/SwiftUI code review on changed files"
+
+prompt = """
+@./swift-code-reviewer.md
+
+Review the Swift changes in this repository using the multi-phase workflow above.
+
+Steps:
+1. Run `git diff --staged -- '*.swift'` (fall back to `git diff HEAD -- '*.swift'` if empty).
+2. If a PR number was provided, also run `gh pr view <n> --json title,body,closingIssuesReferences`.
+3. Load project standards from GEMINI.md if it exists.
+4. Perform the full Phase 1 → 2 → 2.5 → 3 analysis.
+5. Output a structured report with severity levels (Critical / High / Medium / Low),
+   file:line references, before/after code examples, and Agent Loop Feedback.
+"""

@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-05-07
+
+### Added
+
+- **Multi-agent installer** — `npx swift-code-reviewer-skill init` now prompts to select one or more
+  agent targets (Claude Code, OpenAI Codex CLI, Google Gemini CLI, Kiro) via an interactive
+  `@inquirer/prompts` checkbox; `--agent <name[,name]>` and `--all` flags bypass the prompt for
+  CI/scripted use; non-TTY without flags defaults to `claude` (preserves all existing CI scripts)
+- **Canonical core** (`core/swift-code-reviewer.core.md`) — agent-agnostic source of truth with
+  `<PROJECT_STANDARDS_FILE>` and `<COMPANION_REF:...>` tokens; per-agent wrappers substitute back
+- **Per-agent sidecar templates** under `templates/agents/{claude,codex,gemini,kiro}/`:
+  - `claude/swift-code-reviewer.md` — loads from `~/.claude/skills/` with full companion-skill refs
+  - `codex/swift-code-reviewer.md` — standalone, references `AGENTS.md`, condensed rules inlined
+  - `gemini/swift-code-reviewer.md` — standalone, references `GEMINI.md`, condensed rules inlined
+  - `kiro/swift-code-reviewer.md` — `inclusion: fileMatch` + `fileMatchPattern: "**/*.swift"`,
+    auto-activates on any Swift file; workspace-scoped (global steering has known bug #6171)
+- **Per-agent command templates** under `templates/commands/{claude,gemini}/`:
+  - `claude/review.md` — `/review` slash command (unchanged behavior)
+  - `gemini/review.toml` — Gemini custom command; `prompt` uses `@./swift-code-reviewer.md`
+- **`examples/`** directory — three real review reports against pinned OSS PRs (cited by commit SHA)
+- **`assets/init-demo.tape`** — VHS tape script to regenerate the interactive-install GIF
+- `bin/lib/agents.js` — idempotent per-agent install functions (Created / Updated / Skipped logging)
+- `bin/lib/prompt.js` — TTY-aware agent selection (`selectAgents`)
+- `__tests__/installer.test.js` — installer tests using Node's built-in `node:test`
+- `CONTRIBUTING.md` "Adding a new agent target" section documents the contribution path
+
+### Changed
+
+- `bin/install.js` refactored: argv parse for flags, delegates to `bin/lib/agents.js` and
+  `bin/lib/prompt.js`; post-install hint is now per-agent (Codex shows AGENTS.md snippet,
+  Gemini shows TOML command hint, Kiro notes workspace-scoped steering)
+- `templates/agents/swift-code-reviewer.md` and `templates/commands/review.md` moved to
+  `templates/agents/claude/` and `templates/commands/claude/` respectively
+- README fully rewritten: monozukuri spine, per-agent capability matrix, per-agent quirks section,
+  real review excerpt replacing synthetic `LoginViewModel.swift` block
+
+### Notes
+
+- New runtime dependency: `@inquirer/prompts@^7` (~200 KB added to install size)
+- Codex does not support `/review` slash commands; `@`-mentions in `AGENTS.md` are not
+  auto-resolved — the post-install hint provides the exact snippet to paste
+- Kiro global-steering has a known bug ([#6171](https://github.com/kirodotdev/Kiro/issues/6171));
+  the installer uses workspace-scoped `fileMatch` steering instead
+
 ## [1.3.0] - 2026-05-07
 
 ### Added
@@ -120,6 +164,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **1.4.0** (2026-05-07): Multi-agent installer (Claude/Codex/Gemini/Kiro), canonical core, per-agent sidecar templates, real examples, VHS tape
 - **1.3.0** (2026-05-07): Add spec adherence review and agent-loop meta-feedback layer
 - **1.2.1** (2026-04-21): Fix installer not copying `skills/` and `templates/` directories
 - **1.2.0** (2026-04-21): Bundle five companion Swift skills, add `init` scaffolding command, skill-review CI action, SKILL.md condensed 71%
