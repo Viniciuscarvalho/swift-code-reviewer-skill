@@ -32,3 +32,7 @@ Temporary Items
 # Backup files
 *.bak
 *.tmp
+
+# Node
+node_modules/
+package-lock.json
