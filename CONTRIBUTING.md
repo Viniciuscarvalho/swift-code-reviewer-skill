@@ -33,6 +33,7 @@ We welcome suggestions for:
 
 1. Fork the repository
 2. Clone your fork:
+
    ```bash
    git clone https://github.com/yourusername/swift-code-reviewer-skill.git
    cd swift-code-reviewer-skill
@@ -54,7 +55,7 @@ When modifying the main skill file:
 3. Update table of contents if adding sections
 4. Test with real Swift/SwiftUI code
 
-**Reference Files (references/*.md)**
+**Reference Files (references/\*.md)**
 
 When updating reference documentation:
 
@@ -79,23 +80,28 @@ When updating reference documentation:
 
 Always use this format for examples:
 
-```markdown
+````markdown
 **Check for:**
+
 - [ ] Pattern or rule to check
 
 **Examples:**
 
 ❌ **Bad: [Description]**
+
 ```swift
 // Code showing the anti-pattern
 ```
+````
 
 ✅ **Good: [Description]**
+
 ```swift
 // Code showing the correct pattern
 ```
 
 **Why This Matters**: [Explanation of impact]
+
 ```
 
 #### Testing Your Changes
@@ -123,11 +129,13 @@ Always use this format for examples:
 Write clear, descriptive commit messages:
 
 ```
+
 Add force unwrap detection in security checklist
 
 - Added pattern detection for !, as!, and try!
 - Included examples of safe alternatives
 - Updated security-checklist.md with new section
+
 ```
 
 **Format:**
@@ -149,6 +157,78 @@ Add force unwrap detection in security checklist
 
 5. **Respond to feedback** from reviewers
 6. **Keep commits clean** (squash if needed)
+
+## Adding a New Agent Target
+
+The skill ships with four built-in targets (Claude, Codex, Gemini, Kiro). Adding another
+follows a four-step checklist:
+
+### 1. Create the agent template
+
+```
+
+templates/agents/<agent>/swift-code-reviewer.md
+
+```
+
+Base it on `core/swift-code-reviewer.core.md`. Substitute:
+- `<PROJECT_STANDARDS_FILE>` → the path your agent reads for project standards
+- `<COMPANION_REF:...>` → inline the key excerpt or omit if the agent can read
+  the file at `~/.claude/skills/swift-code-reviewer-skill/…`
+
+Add agent-specific frontmatter if required (e.g., Kiro's `inclusion: fileMatch`).
+
+If your agent supports slash commands, also create:
+```
+
+templates/commands/<agent>/review.<ext>
+
+````
+
+### 2. Add an install function in `bin/lib/agents.js`
+
+```js
+function installMyAgent(packageRoot, cwd, { dryRun = false, force = false } = {}) {
+  // copy template(s), print post-install hints
+}
+````
+
+Export it and add it to `AGENT_INSTALLERS`:
+
+```js
+const AGENT_INSTALLERS = {
+  claude: installClaude,
+  codex: installCodex,
+  gemini: installGemini,
+  kiro: installKiro,
+  myagent: installMyAgent, // ← add here
+};
+```
+
+### 3. Update the README
+
+- Add a row to the **Capability matrix** table.
+- Add a subsection under **Per-agent quirks & limitations** documenting
+  any behavioral differences or known issues.
+
+### 4. Add tests in `__tests__/installer.test.js`
+
+Cover at minimum: file creation, idempotency (skip on second run), dry-run
+creates no files, and any frontmatter assertions specific to your agent.
+
+### Checklist
+
+- [ ] `templates/agents/<agent>/swift-code-reviewer.md` created
+- [ ] Command template created (if supported)
+- [ ] `bin/lib/agents.js` `installMyAgent` function added and exported
+- [ ] `AGENT_INSTALLERS` map updated
+- [ ] `VALID_AGENTS` implicitly updated (it's `Object.keys(AGENT_INSTALLERS)`)
+- [ ] README capability matrix row added
+- [ ] README per-agent quirks section added
+- [ ] Tests added in `__tests__/installer.test.js`
+- [ ] `CHANGELOG.md` updated
+
+---
 
 ## What to Contribute
 
@@ -198,7 +278,7 @@ Add force unwrap detection in security checklist
 - **Clear and concise**: Avoid unnecessary words
 - **Active voice**: "Use @Observable" not "@ Observable should be used"
 - **Specific**: "View body exceeds 50 lines" not "View is too large"
-- **Educational**: Explain *why*, not just *what*
+- **Educational**: Explain _why_, not just _what_
 - **Respectful**: Assume good intentions, be constructive
 
 ## Review Criteria
@@ -214,6 +294,7 @@ Pull requests are evaluated on:
 ## Recognition
 
 Contributors will be:
+
 - Listed in the README
 - Credited in release notes
 - Thanked in the community
@@ -232,6 +313,7 @@ Significant contributions may result in becoming a maintainer.
 ### Our Pledge
 
 We are committed to providing a welcoming and inclusive environment for all contributors, regardless of:
+
 - Experience level
 - Background
 - Identity
@@ -256,6 +338,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 ### Enforcement
 
 Violations will result in:
+
 1. Warning
 2. Temporary ban
 3. Permanent ban (severe or repeated violations)
