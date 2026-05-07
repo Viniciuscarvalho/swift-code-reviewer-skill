@@ -5,37 +5,28 @@ Set Height 550
 Set Theme "Catppuccin Mocha"
 Set Padding 20
 Set Shell zsh
+Set TypingSpeed 40ms
 
 # Start in a fresh temp project directory
-Type "cd $(mktemp -d) && git init"
+Type "TMPDIR=$(mktemp -d) && cd $TMPDIR && git init"
 Enter
-Sleep 600ms
+Sleep 1s
 
-# Show the install command
-Type "npx swift-code-reviewer-skill init"
-Sleep 400ms
+# Show the install command (--all skips interactive prompt, works reliably in VHS)
+Type "node /Users/viniciuscarvalho/Documents/swift-code-reviewer-skill/bin/install.js init --all"
+Sleep 500ms
 Enter
-Sleep 2000ms
+Sleep 4s
 
-# @inquirer/prompts checkbox renders — navigate it
-# Claude Code is pre-checked; also select Gemini
-Down
-Sleep 300ms
-Space
-Sleep 300ms
+# Show the scaffolded files
+Type "find .claude .gemini .kiro -type f 2>/dev/null | sort"
 Enter
 Sleep 1500ms
 
-# Post-install output for Claude Code
-Sleep 500ms
-
-# Post-install output for Gemini
-Sleep 500ms
-
-# Show the created files
-Type "find .claude .gemini -type f 2>/dev/null | sort"
+# Show the sidecar file created for Codex/Gemini at the repo root
+Type "ls swift-code-reviewer.md"
 Enter
-Sleep 800ms
+Sleep 1s
 
 # Final pause so viewer can read the output
-Sleep 1500ms
+Sleep 2s

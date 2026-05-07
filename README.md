@@ -5,7 +5,7 @@
 
 Multi-layer Swift/SwiftUI code review for Claude Code, OpenAI Codex CLI, Google Gemini CLI, and Kiro — with spec adherence, agent loop feedback, and project-standards validation.
 
-<!-- GIF placeholder — replace with assets/init-demo.gif once generated via `vhs assets/init-demo.tape` -->
+![Init demo](assets/init-demo.gif)
 
 ---
 
@@ -319,11 +319,13 @@ author and want attribution updated or content removed, please
 - No `/review` slash command — Codex CLI does not support custom slash commands
 - `@`-path mentions in `AGENTS.md` are **not** auto-resolved; Codex concatenates `AGENTS.md`
   verbatim into the system prompt. After `init`, paste this into your `AGENTS.md` manually:
+
   ```markdown
   ## Swift code review
 
   See swift-code-reviewer.md for the full review guide.
   ```
+
 - Companion skill excerpts are inlined into `swift-code-reviewer.md`; no external files needed
 
 ### Google Gemini CLI
