@@ -35,6 +35,9 @@ print_header() {
   printf "${BOLD}${BLUE}│${RESET}  ${BOLD}Swift Code Reviewer Skill Installer${RESET}  ${BOLD}${BLUE}│${RESET}\n"
   printf "${BOLD}${BLUE}│${RESET}  ${DIM}v${SKILL_VERSION}${RESET}                                 ${BOLD}${BLUE}│${RESET}\n"
   printf "${BOLD}${BLUE}╰──────────────────────────────────────╯${RESET}\n\n"
+  printf "  ${YELLOW}Deprecation notice:${RESET} install-skill.sh is kept for compatibility.\n"
+  printf "  The preferred installer is:\n"
+  printf "    ${CYAN}npx swift-code-reviewer-skill [command] [options]${RESET}\n\n"
 }
 
 print_success() { printf "  ${CHECK} ${GREEN}%s${RESET}\n" "$1"; }
@@ -111,54 +114,9 @@ install_skill() {
 }
 
 init_project() {
-  print_header
-
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  TEMPLATES_DIR="${SCRIPT_DIR}/templates"
-
-  print_step "Scaffolding agent + command into project"
-
-  if [[ ! -d ".git" ]]; then
-    printf "  ${YELLOW}Warning: Not a git repository. Running anyway.${RESET}\n\n"
-  fi
-
-  if [[ ! -d "${TEMPLATES_DIR}/agents" ]]; then
-    print_error "Templates not found. Make sure you're running from the skill repo."
-    exit 1
-  fi
-
-  mkdir -p .claude/agents .claude/commands
-
-  local created=0
-  local skipped=0
-
-  # Agent
-  if [[ -f ".claude/agents/swift-code-reviewer.md" ]]; then
-    print_skip "Skipped .claude/agents/swift-code-reviewer.md (already exists)"
-    ((skipped++))
-  else
-    cp "${TEMPLATES_DIR}/agents/swift-code-reviewer.md" ".claude/agents/swift-code-reviewer.md"
-    print_success "Created .claude/agents/swift-code-reviewer.md"
-    ((created++))
-  fi
-
-  # Command
-  if [[ -f ".claude/commands/review.md" ]]; then
-    print_skip "Skipped .claude/commands/review.md (already exists)"
-    ((skipped++))
-  else
-    cp "${TEMPLATES_DIR}/commands/review.md" ".claude/commands/review.md"
-    print_success "Created .claude/commands/review.md"
-    ((created++))
-  fi
-
-  printf "\n  ${BOLD}${GREEN}Done!${RESET} ${created} file(s) created, ${skipped} skipped.\n"
-
-  if [[ ${created} -gt 0 ]]; then
-    printf "\n  ${BOLD}Usage:${RESET}\n"
-    printf "  ${CYAN}→${RESET} /review                    — run a full code review before pushing\n"
-    printf "  ${CYAN}→${RESET} @swift-code-reviewer       — invoke the agent directly\n\n"
-  fi
+  # Delegate to the Node installer so all flags (--agent, --all, --dry-run) pass through
+  exec node "${SCRIPT_DIR}/bin/install.js" init "$@"
 }
 
 uninstall_skill() {
