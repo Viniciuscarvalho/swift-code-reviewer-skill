@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-05-07
+
+### Added
+
+- **Spec adherence review** (`references/spec-adherence.md`) — validates implementation against PR description and linked issues, flagging scope drift and unimplemented requirements
+- **Agent-loop feedback** (`references/agent-loop-feedback.md`) — meta-review layer that identifies recurring patterns suggesting gaps in the agent's own instructions, improving future AI-generated code quality
+
 ## [1.2.1] - 2026-04-21
 
 ### Fixed
@@ -113,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **1.3.0** (2026-05-07): Add spec adherence review and agent-loop meta-feedback layer
 - **1.2.1** (2026-04-21): Fix installer not copying `skills/` and `templates/` directories
 - **1.2.0** (2026-04-21): Bundle five companion Swift skills, add `init` scaffolding command, skill-review CI action, SKILL.md condensed 71%
 - **1.1.1** (2026-03-24): Fix incorrect `install-skill.sh` (was XcodeBuildMCP installer)
