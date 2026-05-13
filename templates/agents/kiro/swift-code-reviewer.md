@@ -27,6 +27,50 @@ Apply this guide when the user:
 
 ---
 
+## Phase 0 — Resolve Scope
+
+Produce a canonical scope object before analysis begins. All later phases read from it.
+
+**Mode detection** (first match wins):
+
+1. PR number/URL supplied → **PR mode** (`gh pr view <n> --json files,baseRefName`)
+2. Explicit file paths supplied → **File mode** (paths → `scope.modified`, skip detection)
+3. `gh pr view --json number` returns a result for the current branch → **PR mode** (auto-detected; announce it)
+4. "staged"/"cached" in invocation → **Staged mode** (`git diff --cached --name-status`)
+5. Default → **Local mode** (`git diff --name-status <base>...HEAD` + `git diff --name-status`, union)
+
+Base branch: `gh pr view --json baseRefName` → `git rev-parse --abbrev-ref origin/HEAD` → `main`/`master`.
+If `gh` unavailable: announce loudly and fall back to local mode.
+
+**Scope object**:
+
+```
+scope = {
+  modified:         Set<Path>   // full analysis, all severity levels
+  deleted:          Set<Path>   // spec-adherence only, skip per-file loop
+  testsForModified: Set<Path>   // coverage → main report; other findings → Adjacent Observations
+  related:          Set<Path>   // context reads only → Adjacent Observations
+}
+```
+
+- `M`/`A`/`C` status → `modified` · `D` → `deleted` · `R` new path → `modified`
+- `testsForModified`: mirror source path into test tree; fall back to `*Tests.swift` siblings
+- Exclude: `Pods/**`, `Carthage/**`, `.build/**`, `*.generated.swift`, `*.pb.swift`
+- Exclude any `review-excluded-paths` patterns in `.kiro/steering/project-standards.md`
+
+**Scope banner** (mandatory — print before any findings):
+```
+Scope: PR #123 · base: main · modified: 7 · tests-for-modified: 3 · deleted: 1 · related: 12
+```
+Auto-detected PR: prepend `"Detected open PR #123 (base: main). Run with --local to review uncommitted work instead."`
+
+**Enforcement** (applies throughout Phases 1–3):
+- **L1**: any file in `scope.modified` is reviewed in full — every line, not just changed lines
+- **O1**: findings outside `scope.modified` (or non-coverage findings in `scope.testsForModified`) → **Adjacent Observations**, labelled *"out of scope for this PR"*
+- Severity rollup counts in-scope findings only
+
+---
+
 ## Phase 1 — Context Gathering
 
 1. **Read the spec** (if a PR number is provided):
@@ -41,17 +85,12 @@ Apply this guide when the user:
 2. **Load project standards** from `.kiro/steering/project-standards.md`.
    If absent → note _"No project standards found — using Apple defaults"_, continue.
 
-3. **Obtain changeset**:
+3. Use `scope.modified` from Phase 0 as the authoritative file list. For diff context per file:
+   - PR mode: `gh pr diff <n> -- <file>`
+   - Local mode: `git diff <base>...HEAD -- <file>`
+   If `scope.modified` is empty, stop and report the scope banner with no findings.
 
-   ```bash
-   git diff --staged -- '*.swift'
-   git diff HEAD -- '*.swift'       # fallback
-   gh pr diff <n>                   # PR review
-   ```
-
-   If empty → ask the user to specify files, a PR number, or a directory.
-
-4. Read each changed `.swift` file plus its corresponding test file (if present).
+4. Read each file in `scope.modified` in full. Add imported files, protocol declarations, and parent views to `scope.related` — readable for context, findings go to Adjacent Observations. Test files in `scope.testsForModified` are read here for coverage analysis.
 
 ---
 
@@ -167,6 +206,8 @@ After collecting all findings:
 ## Phase 3 — Report
 
 ```
+Scope: PR #123 · base: main · modified: 7 · tests-for-modified: 3 · deleted: 1 · related: 12
+
 # Code Review — <scope>
 
 ## Summary
@@ -206,6 +247,18 @@ Fix: <explanation + corrected snippet>
 **Files**: file.swift:line, ...
 **Suggested rule for .kiro/steering/project-standards.md**:
 > <directive>
+
+---
+
+## Adjacent Observations
+*Out of scope for this PR. Findings in files read for context that were not modified. Not counted
+in the summary above. File separately or address in a follow-up PR.*
+
+### <RelatedFile.swift> (unmodified)
+
+[Severity] **<Category>** (line N)
+Current: `<snippet>`
+Note: <what the issue is — no action required for this PR>
 ```
 
 **Severity guide**

@@ -10,19 +10,11 @@ Load and follow the rules from `~/.claude/skills/swift-code-reviewer-skill/SKILL
 
 When invoked, execute these steps in order:
 
-### 1. Collect the diff
+### 1. Resolve scope
 
-```bash
-git diff --staged -- '*.swift'
-```
-
-If nothing is staged, fall back to:
-
-```bash
-git diff HEAD -- '*.swift'
-```
-
-If still empty, tell the user there are no Swift changes to review.
+Execute **Phase 0** from `~/.claude/skills/swift-code-reviewer-skill/SKILL.md` to build the scope
+object and print the scope banner. Do not run ad-hoc `git diff` commands here — Phase 0 is the
+single source of truth for what is in scope.
 
 ### 2. Run SwiftLint (if available)
 

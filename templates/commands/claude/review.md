@@ -8,7 +8,7 @@ Run the full code review checklist against current Swift changes.
 
 When invoked:
 
-1. **Identify changed files** — use `git diff --name-only` (staged + unstaged), filter to `*.swift`.
+1. **Resolve scope** — execute Phase 0 from the swift-code-reviewer-skill (see `SKILL.md`). Print the scope banner. The resulting `scope.modified` is the authoritative file list for all subsequent steps.
 2. **Load CLAUDE.md** — read project conventions if `.claude/CLAUDE.md` exists.
 3. **Run SwiftLint** — if available, collect warnings/errors.
 4. **Run the universal checklist** against the diff.
