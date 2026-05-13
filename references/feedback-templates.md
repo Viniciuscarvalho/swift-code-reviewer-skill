@@ -490,7 +490,58 @@ private struct LoginFormView: View {
 
 ---
 
-## 5. Complete Review Report Template
+## 5. Scope Banner
+
+Print this as the very first line of the report — before the title. It lets the reviewer verify scope instantly; if it's wrong, every finding below is suspect.
+
+```markdown
+Scope: PR #123 · base: main · modified: 7 · tests-for-modified: 3 · deleted: 1 · related: 12
+```
+
+Variants:
+
+```markdown
+# Auto-detected PR
+Detected open PR #123 (base: main). Run with --local to review uncommitted work instead.
+Scope: PR #123 · base: main · modified: 7 · tests-for-modified: 3 · deleted: 1 · related: 12
+
+# Local mode
+Scope: local (base: main) · modified: 4 (3 pushed, 1 uncommitted) · related: 8
+
+# gh unavailable
+`gh` unavailable — falling back to local mode against origin/main. Run `gh auth login` for full PR scope detection.
+Scope: local (base: origin/main) · modified: 4 · related: 6
+```
+
+---
+
+## 6. Adjacent Observations Template
+
+Use this section for findings in files that were **read for context** but are **not in `scope.modified`**. These are quarantined from the main report and excluded from the severity rollup. Place this section after **Agent Loop Feedback**, at the very end.
+
+```markdown
+---
+
+## Adjacent Observations
+*Out of scope for this PR. These findings are in files read for context that were not modified.
+Not counted in the summary above. File separately or address in a follow-up PR.*
+
+### AuthProviding.swift (unmodified — read as protocol dependency of LoginViewModel.swift)
+
+[High] **Safety** (line 34)
+Current: `let token = storage.read()!`
+Note: Force-unwrap in an unmodified protocol implementation — not a blocker for this PR, but
+will crash if `storage.read()` returns nil. File a follow-up to add `guard let` here.
+```
+
+Rules:
+- Never add Adjacent findings to the `Critical/High/Medium/Low` rollup in Summary
+- Always label the file as `(unmodified)` and state which `scope.modified` file triggered the read
+- Use `Note:` not `Fix:` — the dev isn't expected to fix this in the current PR
+
+---
+
+## 7. Complete Review Report Template
 
 ```markdown
 # Code Review Report

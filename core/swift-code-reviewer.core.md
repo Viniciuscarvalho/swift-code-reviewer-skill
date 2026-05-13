@@ -23,6 +23,99 @@ Multi-layer review covering Swift 6+ concurrency, SwiftUI patterns, performance,
 
 ## Workflow
 
+### Phase 0 — Resolve Scope
+
+**Objective**: Produce a canonical scope object before any analysis begins. Every later phase reads from this object — no phase fetches the changeset independently.
+
+#### Mode Detection
+
+Run these checks in order; stop at the first match:
+
+| Priority | Condition | Mode |
+|----------|-----------|------|
+| 1 | PR number or URL supplied by user | **PR** — `gh pr view <n> --json files,baseRefName` |
+| 2 | Explicit file paths supplied by user | **File** — supplied paths → `scope.modified`, skip detection |
+| 3 | `gh pr view --json number` returns a result for current branch | **PR** (auto-detected) |
+| 4 | "staged" or "cached" in user's invocation | **Staged** — `git diff --cached --name-status` |
+| 5 | Default | **Local** — `git diff --name-status <base>...HEAD` + `git diff --name-status` (union) |
+
+**Base branch resolution** (for PR auto-detect and Local mode):
+
+```bash
+# 1. PR metadata (authoritative when a PR exists)
+gh pr view --json baseRefName --jq '.baseRefName'
+# 2. Remote default branch
+git rev-parse --abbrev-ref origin/HEAD
+# 3. Last resort
+git branch -r | grep -E 'origin/(main|master)$' | head -1
+```
+
+If `gh` is unavailable or unauthenticated, announce loudly and fall back to Local:
+> "`gh` unavailable — falling back to local mode against `origin/main`. Run `gh auth login` for full PR scope detection."
+
+#### Scope Object
+
+```
+scope = {
+  modified:         Set<Path>   // first-class findings — full file, all severity levels
+  deleted:          Set<Path>   // spec-adherence reasoning only — skip per-file analysis loop
+  testsForModified: Set<Path>   // coverage findings → main report; other findings → Adjacent Observations
+  related:          Set<Path>   // read for context only — all findings → Adjacent Observations
+}
+```
+
+**Populate `modified` and `deleted`**:
+
+```bash
+# PR mode
+gh pr view <n> --json files --jq '.files[] | [.path, .status] | @tsv'
+# Local / Staged
+git diff --name-status <base>...HEAD
+```
+
+- Status `M`, `A`, `C` → `scope.modified`
+- Status `D` → `scope.deleted`
+- Status `R` (rename) → new path → `scope.modified`; record old path so the agent avoids critiquing unchanged content as new code
+
+**Populate `testsForModified`**: For each path in `scope.modified`:
+1. Mirror into test tree: `Features/Login/LoginViewModel.swift` → `Tests/Features/Login/LoginViewModelTests.swift`
+2. Fall back: search for `*Tests.swift` in the same directory
+3. Add found paths (that exist on disk) to `scope.testsForModified`
+
+**Populate `related`**: Added during Phase 1 as the agent reads imported files, protocol declarations, and parent views for context.
+
+**Excluded paths** — filter from all sets before finalising:
+- `Pods/**`, `Carthage/**`, `.build/**`, `DerivedData/**`, `.swiftpm/**`
+- `*.generated.swift`, `*.pb.swift`, `R.generated.swift`
+- Any patterns in a `review-excluded-paths` block in `<PROJECT_STANDARDS_FILE>`
+
+#### Scope Banner (mandatory — first output before any findings)
+
+```
+Scope: PR #123 · base: main · modified: 7 · tests-for-modified: 3 · deleted: 1 · related: 12
+```
+
+For auto-detected PR, prepend a detection notice:
+```
+Detected open PR #123 (base: main). Run with --local to review uncommitted work instead.
+Scope: PR #123 · base: main · modified: 7 · tests-for-modified: 3 · deleted: 1 · related: 12
+```
+
+For local mode:
+```
+Scope: local (base: main) · modified: 4 (3 pushed, 1 uncommitted) · related: 8
+```
+
+#### Scope Enforcement
+
+These rules apply throughout Phases 1–3:
+
+- **L1 — file-level**: Any file in `scope.modified` is reviewed in full — every line is in scope, not just changed lines.
+- **O1 — quarantine**: Findings against files outside `scope.modified` (and outside coverage checks in `scope.testsForModified`) go into **Adjacent Observations** — a dedicated section at the end of the report labelled *"out of scope for this PR — file separately."*
+- **Severity rollup** (`Critical: N | High: N | …`) counts only in-scope findings. Adjacent Observations are excluded.
+
+---
+
 ### Phase 1 — Context Gathering
 
 1. **Read the Spec**
@@ -37,9 +130,11 @@ Multi-layer review covering Swift 6+ concurrency, SwiftUI patterns, performance,
    - If no PR/issue context is available, note this and fall back to inferring intent from the diff.
 2. Try to load `<PROJECT_STANDARDS_FILE>`.
    - **If missing**: add a note to the report — _"No project standards file found — review uses default Apple guidelines"_ — then continue.
-3. Obtain the changeset: `git diff`, `git diff --cached`, or `gh pr diff <n>`.
-   - **If diff is empty**: stop and ask the user to specify files, a PR number, or a directory.
-4. Read each changed file plus key related files (imports, protocols it conforms to, corresponding test file if present).
+3. Use `scope.modified` from Phase 0 as the authoritative file list. To understand what changed in each file:
+   - PR mode: `gh pr diff <n> -- <file>`
+   - Local mode: `git diff <base>...HEAD -- <file>`
+   - If `scope.modified` is empty after Phase 0, stop and report the scope banner with no findings.
+4. Read each file in `scope.modified` in full. As you encounter imported files, protocol declarations, parent views, and other dependencies, add them to `scope.related` — they can be read freely, but findings against them go to Adjacent Observations. Test files in `scope.testsForModified` are read here for coverage analysis.
 
 ### Phase 2 — Analysis
 
@@ -52,10 +147,11 @@ Reference: `references/spec-adherence.md`
 - **Requirement Coverage**
   - Does each acceptance criterion map to a concrete code change?
   - Are edge cases mentioned in the spec handled?
-  - Are tests covering the scenarios described?
+  - For files in `scope.testsForModified`: are tests covering the scenarios described in the spec? Coverage gaps → main report. Other issues found in those test files → Adjacent Observations.
 - **Scope Discipline**
   - Flag changes outside the stated scope (scope creep)
   - Flag unrelated refactors bundled into the PR
+- **Deleted Files**: For each path in `scope.deleted`, reason about whether its removal satisfies or violates a spec requirement. Include in the Requirement Coverage table; skip the per-file analysis loop.
 - **Missing Work**
   - TODOs, `fatalError("not implemented")`, empty function bodies
   - Stubbed mocks that should be real implementations
@@ -162,6 +258,8 @@ Also migrate from `ObservableObject`/`@Published` to `@Observable` (iOS 17+) —
 ## Output Format
 
 ```
+Scope: PR #123 · base: main · modified: 7 · tests-for-modified: 3 · deleted: 1 · related: 12
+
 # Code Review — <scope>
 
 ## Summary
@@ -223,6 +321,18 @@ in `<PROJECT_STANDARDS_FILE>`:
 **Suggested rule**:
 > Views must not contain business logic, network calls, or data transformations.
 > Move all such work into the @Observable view model.
+
+---
+
+## Adjacent Observations
+*Out of scope for this PR. Findings in files read for context that were not modified in this PR.
+Not counted in the summary above. File separately or address in a follow-up PR.*
+
+### <RelatedFile.swift> (unmodified)
+
+[Severity] **<Category>** (line N)
+Current: `<snippet>`
+Note: <what the issue is — no action required for this PR>
 ```
 
 Full templates and severity classification: `references/feedback-templates.md`.

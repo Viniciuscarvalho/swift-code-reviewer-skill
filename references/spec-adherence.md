@@ -68,7 +68,26 @@ and note the lack of explicit criteria in the report.
 
 ---
 
-## 3. Handling PRs With No Description
+## 3. Deleted Files and Test Coverage
+
+### Deleted Files (`scope.deleted`)
+
+Files in `scope.deleted` were removed in this PR. Do not include them in the per-file analysis loop. Do include them in the Requirement Coverage table when their removal is spec-relevant.
+
+Ask: does the deletion satisfy a requirement ("remove legacy endpoint") or violate one ("auth service removed but login flow still referenced")? Flag unexplained deletions of non-trivial files as `⚠️ Partial` in the table with a note: *"File removed — confirm this is intentional and that callers are updated."*
+
+### Test Coverage (`scope.testsForModified`)
+
+For each file in `scope.testsForModified`:
+- Check whether tests cover the scenarios described in the spec. Coverage gaps (new branches, new functions, changed behaviour with no test) → **first-class findings in the main report**.
+- Other issues found in those test files (e.g., force-unwrap in test helper, bad assertion pattern) → **Adjacent Observations** (out of scope for this PR).
+
+If no file in `scope.testsForModified` exists for a modified source file, add a finding:
+> `⚠️ No test file found for <SourceFile.swift> — consider adding one or updating an existing test suite.`
+
+---
+
+## 4. Handling PRs With No Description
 
 A blank or near-blank description is itself a finding. Do not invent intent.
 

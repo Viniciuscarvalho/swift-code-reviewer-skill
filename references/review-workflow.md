@@ -66,89 +66,40 @@ Project Guidelines Summary:
 
 ### Step 1.2: Identify Review Scope
 
-**Objective**: Determine which files to review and what changed
+**Objective**: Determine which files to review and what changed.
 
-**Scenarios:**
+> **This step is now handled by Phase 0.** Run Phase 0 from `SKILL.md` (or the equivalent agent
+> template) to produce the canonical `scope` object. Phase 0 covers all scenarios — PR number
+> supplied, auto-detected PR branch, staged-only, local branch, or explicit file paths.
+>
+> Do **not** run ad-hoc `git diff` commands here. Use `scope.modified` as the file list for all
+> subsequent steps.
 
-#### Scenario A: Review Pull Request / Merge Request
-
-**GitHub (using gh CLI):**
-```bash
-# Get PR details
-gh pr view 123
-
-# Get PR diff
-gh pr diff 123 > pr_changes.diff
-
-# List changed files
-gh pr view 123 --json files -q '.files[].path'
-
-# Get PR description
-gh pr view 123 --json body -q '.body'
-```
-
-**GitLab (using glab CLI):**
-```bash
-# Get MR details
-glab mr view 456
-
-# Get MR diff
-glab mr diff 456 > mr_changes.diff
-
-# List changed files
-glab mr view 456 --json
-
-# Get MR description
-glab mr view 456 --json
-```
-
-**What to Extract:**
-- List of changed files
-- Nature of changes (addition, modification, deletion)
-- PR/MR description and context
-- Related issue/ticket numbers
-- Author comments
-
-#### Scenario B: Review Uncommitted Changes
+**Quick reference** (Phase 0 uses these internally — do not call them directly):
 
 ```bash
-# Get all uncommitted changes
-git diff > uncommitted_changes.diff
+# PR file list
+gh pr view <n> --json files --jq '.files[] | [.path, .status] | @tsv'
 
-# Get staged changes only
-git diff --cached > staged_changes.diff
+# Local branch vs base
+git diff --name-status <base>...HEAD
 
-# List modified files
-git diff --name-only
+# Staged only
+git diff --cached --name-status
 
-# Get status for context
-git status
+# Base branch detection
+gh pr view --json baseRefName --jq '.baseRefName'
+git rev-parse --abbrev-ref origin/HEAD
 ```
 
-#### Scenario C: Review Specific Files
+**Categorize Changes** (after Phase 0 builds the scope):
 
-When user specifies files directly:
-```bash
-# User says: "Review LoginView.swift and LoginViewModel.swift"
-# Simply read those files
-```
-
-#### Scenario D: Review Specific Directory
-
-```bash
-# User says: "Review all ViewModels in Features/"
-# Find all ViewModel files
-find Features/ -name "*ViewModel.swift"
-```
-
-**Categorize Changes:**
-
-After identifying files, categorize by type:
+After Phase 0, categorize `scope.modified` by type:
 - **UI Code**: Views, view modifiers, SwiftUI components
 - **Business Logic**: ViewModels, services, use cases
 - **Data Layer**: Repositories, network clients, database
 - **Infrastructure**: Dependency injection, configuration
-- **Tests**: Unit tests, UI tests, integration tests
+- **Tests**: Unit tests, UI tests, integration tests (`scope.testsForModified`)
 - **Build**: Project configuration, build scripts
 
 ### Step 1.3: Parse Diff for Context
